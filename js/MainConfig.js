@@ -36,7 +36,6 @@ var SCENE_KEYS = {
 // ---------- Phaser 根配置 ----------
 var PHASER_GAME_CONFIG = {
   type: Phaser.AUTO,
-  backgroundColor: '#2a1a0a',
   resolution: window.devicePixelRatio || 1,
   scale: {
     parent: 'game',
