@@ -4,153 +4,394 @@
  *      ConstructFireScene, MaintainFireScene
  */
 
-// ---------- Scene 4：Preparing the Fire Site（清理碎屑 + 拖拽石头摆火圈） ----------
+// ---------- Scene 4：Preparing the Fire Site — Isometric 等距营地 ----------
 class FireSitePrepScene extends Phaser.Scene {
   constructor() {
     super({ key: 'FireSitePrepScene' });
   }
 
-  /** 绘制虚线圆环（Ghost ring），用于槽位视觉提示 */
-  addDashedGhostRing(sx, sy, radius, depth) {
-    const g = this.add.graphics();
-    g.setDepth(depth);
-    const color = 0xc4c4c4;
-    const lineAlpha = 0.38;
-    let a = 0;
-    const dash = 0.28;
-    const gap = 0.2;
-    while (a < Math.PI * 2 - 0.01) {
-      const a2 = Math.min(a + dash, Math.PI * 2);
-      g.lineStyle(2, color, lineAlpha);
-      g.beginPath();
-      g.arc(sx, sy, radius, a, a2, false);
-      g.strokePath();
-      a = a2 + gap;
+  /**
+   * 逻辑平面 (gx, gy) → 屏幕等距坐标
+   * x_screen = (gx - gy) * cos(30°) * isoScale + offset_x
+   * y_screen = (gx + gy) * sin(30°) * isoScale + offset_y
+   */
+  cartesianToIso(gx, gy) {
+    let ggx = Number(gx);
+    let ggy = Number(gy);
+    if (!Number.isFinite(ggx)) ggx = 0;
+    if (!Number.isFinite(ggy)) ggy = 0;
+    const k = this.isoScale * this.isoCos;
+    const m = this.isoScale * this.isoSin;
+    const x = this.isoAnchorX + (ggx - ggy) * k;
+    const y = this.isoAnchorY + (ggx + ggy) * m;
+    return {
+      x: Number.isFinite(x) ? x : this.isoAnchorX,
+      y: Number.isFinite(y) ? y : this.isoAnchorY,
+    };
+  }
+
+  /** 屏幕坐标 → 逻辑格（逆变换；与 cartesianToIso 互逆） */
+  isoToCartesian(sx, sy) {
+    let sx_ = Number(sx);
+    let sy_ = Number(sy);
+    if (!Number.isFinite(sx_)) sx_ = this.isoAnchorX;
+    if (!Number.isFinite(sy_)) sy_ = this.isoAnchorY;
+    const k = this.isoScale * this.isoCos;
+    const m = this.isoScale * this.isoSin;
+    const rx = (sx_ - this.isoAnchorX) / k;
+    const ry = (sy_ - this.isoAnchorY) / m;
+    const outX = (rx + ry) / 2;
+    const outY = (ry - rx) / 2;
+    return {
+      x: Number.isFinite(outX) ? outX : 0,
+      y: Number.isFinite(outY) ? outY : 0,
+    };
+  }
+
+  /** 深度排序：depth = 屏幕 y，保证下方物体遮挡上方（立体感） */
+  setDepthFromY(go) {
+    if (go && typeof go.setDepth === 'function') {
+      go.setDepth(go.y);
     }
-    return g;
+  }
+
+  /** 等距菱形草地 + 斜向网格线（最底层） */
+  drawIsoGround() {
+    const g = this.add.graphics().setDepth(-100);
+    const ox = this.isoAnchorX;
+    const oy = this.isoAnchorY + 85;
+    const poly = new Phaser.Geom.Polygon([
+      ox,
+      oy - 200,
+      ox + 340,
+      oy + 20,
+      ox,
+      oy + 240,
+      ox - 340,
+      oy + 20,
+    ]);
+    const pts = poly.points;
+    g.fillStyle(0x1e4a28, 1);
+    g.beginPath();
+    g.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      g.lineTo(pts[i].x, pts[i].y);
+    }
+    g.closePath();
+    g.fillPath();
+    g.lineStyle(2, 0x0f2a16, 0.55);
+    g.beginPath();
+    g.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) {
+      g.lineTo(pts[i].x, pts[i].y);
+    }
+    g.closePath();
+    g.strokePath();
+
+    g.lineStyle(1, 0x2a6a38, 0.28);
+    for (let i = -9; i <= 9; i++) {
+      const a = this.cartesianToIso(i, -9);
+      const b = this.cartesianToIso(i, 9);
+      g.beginPath();
+      g.moveTo(a.x, a.y);
+      g.lineTo(b.x, b.y);
+      g.strokePath();
+    }
+    for (let j = -9; j <= 9; j++) {
+      const a = this.cartesianToIso(-9, j);
+      const b = this.cartesianToIso(9, j);
+      g.beginPath();
+      g.moveTo(a.x, a.y);
+      g.lineTo(b.x, b.y);
+      g.strokePath();
+    }
+  }
+
+  /** 扁平椭圆黄色径向光晕（等距透视下的火光） */
+  drawFireGlowElliptical(fx, fy) {
+    const glow = this.add.graphics().setDepth(fy).setBlendMode(Phaser.BlendModes.ADD);
+    for (let i = 14; i >= 0; i--) {
+      const t = i / 14;
+      const rw = 28 + (1 - t) * 200;
+      const rh = 14 + (1 - t) * 100;
+      const a = 0.05 * (1 - t) * (1 - t);
+      glow.fillStyle(0xffdd99, a);
+      glow.fillEllipse(fx, fy, rw, rh);
+    }
+    glow.fillStyle(0xffaa55, 0.1);
+    glow.fillEllipse(fx, fy - 4, 48, 24);
+  }
+
+  /** 槽位幽灵圈：扁椭圆线框 */
+  addDashedGhostEllipse(sx, sy, rw, rh) {
+    const g = this.add.graphics().setDepth(sy);
+    g.lineStyle(1, 0xb8c8c0, 0.42);
+    g.strokeEllipse(sx, sy, rw * 2, rh * 2);
+    g.lineStyle(1, 0x889898, 0.22);
+    g.strokeEllipse(sx, sy, rw * 2 + 4, rh * 2 + 2);
+  }
+
+  /** 倾斜六边形石块（扁平感） */
+  createHexRock(screenX, screenY, radius) {
+    const squash = 0.5;
+    const flat = [];
+    for (let i = 0; i < 6; i++) {
+      const a = (Math.PI / 3) * i - Math.PI / 6;
+      flat.push(Math.cos(a) * radius, Math.sin(a) * radius * squash);
+    }
+    const poly = this.add.polygon(screenX, screenY, flat, 0x6a6a72, 0x4a4a52);
+    poly.setStrokeStyle(2, 0x3a3a42, 1);
+    const hw = radius * 1.05;
+    const hh = radius * squash * 1.15;
+    poly.setInteractive(
+      new Phaser.Geom.Rectangle(-hw, -hh, hw * 2, hh * 2),
+      Phaser.Geom.Rectangle.Contains
+    );
+    poly.input.cursor = 'pointer';
+    return poly;
+  }
+
+  /** 边缘松树：三层渐缩等边三角形 + 褐色树干，depth = 接地点 screenY */
+  addIsoPineTreeAt(screenX, screenY) {
+    const root = this.add.container(screenX, screenY);
+    const trunk = this.add
+      .rectangle(0, -6, 16, 14, 0x4a3220)
+      .setStrokeStyle(1, 0x2a1a0e, 0.95)
+      .setOrigin(0.5, 1);
+    root.add(trunk);
+    const eqH = (w) => (w * Math.sqrt(3)) / 2;
+    const widths = [54, 40, 28];
+    const greens = [0x124a22, 0x1a6630, 0x248040];
+    let baseY = 0;
+    for (let i = 0; i < 3; i++) {
+      const w = widths[i];
+      const h = eqH(w);
+      const apexY = baseY - h;
+      const tri = this.add.triangle(0, 0, 0, apexY, -w / 2, baseY, w / 2, baseY, greens[i]);
+      tri.setStrokeStyle(1, 0x082010, 0.75);
+      root.add(tri);
+      baseY = apexY + 9;
+    }
+    root.setDepth(screenY);
+    return root;
+  }
+
+  /**
+   * 火堆：Phaser.Geom.Triangle 生成多枚小三角 + ADD 混合 + 随机 alpha 闪烁
+   * depth = 容器接地点 fy
+   */
+  addProceduralFireAt(fx, fy) {
+    const root = this.add.container(fx, fy);
+    const palette = [0xff5500, 0xff8800, 0xffdd66, 0xffbb33, 0xff3300, 0xffaa44, 0xffcc00];
+    for (let i = 0; i < 11; i++) {
+      const jx = Phaser.Math.FloatBetween(-16, 16);
+      const jy = Phaser.Math.FloatBetween(-26, 8);
+      const size = Phaser.Math.FloatBetween(11, 24);
+      const geom = new Phaser.Geom.Triangle(
+        jx,
+        jy - size * 0.9,
+        jx - size * 0.55,
+        jy + size * 0.4,
+        jx + size * 0.55,
+        jy + size * 0.4
+      );
+      const c = Phaser.Math.RND.pick(palette);
+      const tri = this.add.triangle(
+        0,
+        0,
+        geom.x1,
+        geom.y1,
+        geom.x2,
+        geom.y2,
+        geom.x3,
+        geom.y3,
+        c
+      );
+      tri.setStrokeStyle(1, 0xffe0a0, 0.35);
+      tri.setBlendMode(Phaser.BlendModes.ADD);
+      const baseA = Phaser.Math.FloatBetween(0.5, 0.98);
+      tri.setAlpha(baseA);
+      root.add(tri);
+      const aLo = Phaser.Math.FloatBetween(0.28, 0.55);
+      const aHi = Phaser.Math.FloatBetween(0.88, 1);
+      this.tweens.add({
+        targets: tri,
+        alpha: { from: aLo, to: aHi },
+        duration: Phaser.Math.Between(70, 200),
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.inOut',
+        delay: Phaser.Math.Between(0, 500),
+      });
+    }
+    root.setDepth(fy);
+    return root;
   }
 
   create() {
-    // 避免重复进入本场景时叠加全局 drag 监听
     this.input.off('drag');
     this.input.off('dragend');
 
-    // 略深土壤色背景
-    this.cameras.main.setBackgroundColor('#2a2218');
-    this.cameras.main.fadeIn(500, 0, 0, 0);
+    const cfg = this.sys.game.config;
+    const gw = Number(cfg.width) || (typeof GAME_WIDTH !== 'undefined' ? GAME_WIDTH : 800);
+    const gh = Number(cfg.height) || (typeof GAME_HEIGHT !== 'undefined' ? GAME_HEIGHT : 600);
+    this.isoAnchorX = gw / 2;
+    this.isoAnchorY = gh / 4;
+    this.isoScale = 26;
+    this.isoCos = Math.cos(Math.PI / 6);
+    this.isoSin = Math.sin(Math.PI / 6);
 
-    const cx = GAME_WIDTH / 2;
-    const cy = GAME_HEIGHT / 2 - 10;
-    // 中央空地（略浅的“裸土”区域，仅作视觉提示）
-    this.add.rectangle(cx, cy, 520, 360, 0x3d2e22, 1).setDepth(0).setStrokeStyle(2, 0x5c4a3a, 0.5);
-
-    // 6 个槽位：沿正圆均匀分布的“虚线幽灵圆” + 逻辑坐标（磁吸目标中心）
-    const slotRingR = 88;
-    const ghostRingRadius = 26;
-    const SNAP_PX = 50;
-    this.rockSlots = [];
-    for (let i = 0; i < 6; i++) {
-      const ang = -Math.PI / 2 + (i / 6) * Math.PI * 2;
-      const sx = cx + Math.cos(ang) * slotRingR;
-      const sy = cy + Math.sin(ang) * slotRingR;
-      this.addDashedGhostRing(sx, sy, ghostRingRadius, 3);
-      this.rockSlots.push({ x: sx, y: sy, filled: false, index: i });
+    // 上一场景 FireSpotScene 用 fadeOut 切场景时，主摄像机可能仍处在全黑淡出状态；必须清掉再画
+    const cam = this.cameras.main;
+    if (typeof cam.resetFX === 'function') {
+      cam.resetFX();
     }
+    cam.setAlpha(1);
+    if (typeof cam.clearMask === 'function') {
+      cam.clearMask();
+    }
+    cam.setBackgroundColor('#222222');
+    // 不再叠加 fadeIn：避免与上一场景 fadeOut 状态叠加导致长时间全黑
+
+    this.drawIsoGround();
+
+    const firePos = this.cartesianToIso(0, 0);
+    this.drawFireGlowElliptical(firePos.x, firePos.y);
 
     this.add
-      .text(cx, 28, 'Preparing the Fire Site', {
+      .ellipse(firePos.x, firePos.y, 62, 32, 0x2a1810, 1)
+      .setStrokeStyle(2, 0x140c08, 1)
+      .setDepth(firePos.y);
+    this.addProceduralFireAt(firePos.x, firePos.y);
+
+    const pPos = this.cartesianToIso(-1.25, 0.35);
+    const playerRoot = this.add.container(pPos.x, pPos.y);
+    const footY = 6;
+    const shadow = this.add.ellipse(0, footY + 2, 48, 17, 0x000000, 0.38).setOrigin(0.5, 0.5);
+    const body = this.add.circle(0, -10, 20, 0x3a7ec8);
+    body.setStrokeStyle(2, 0x1a5088, 1);
+    const bodyShade = this.add.circle(5, -6, 12, 0x1a5088, 0.45);
+    const head = this.add.circle(0, -44, 15, 0x6ab8f0);
+    head.setStrokeStyle(2, 0x2a6090, 1);
+    const headShade = this.add.circle(4, -41, 8, 0x2a6090, 0.4);
+    const hi = this.add.circle(-11, -48, 5, 0xffffff, 0.3);
+    playerRoot.add([shadow, body, bodyShade, head, headShade, hi]);
+    playerRoot.setDepth(pPos.y);
+
+    const treeGrids = [
+      [-3.2, -2.1],
+      [3.2, -2],
+      [-4, 1.2],
+      [3.8, 1],
+      [-4.6, 0.2],
+      [4.5, 0.1],
+      [0.2, -3.6],
+    ];
+    treeGrids.forEach(([gx, gy]) => {
+      const tp = this.cartesianToIso(gx, gy);
+      this.addIsoPineTreeAt(tp.x, tp.y);
+    });
+
+    const SNAP_PX = 54;
+    const slotRing = [
+      [1.45, 0],
+      [0.72, 0.95],
+      [-0.72, 0.95],
+      [-1.45, 0],
+      [-0.72, -0.95],
+      [0.72, -0.95],
+    ];
+    this.rockSlots = [];
+    slotRing.forEach(([gx, gy], i) => {
+      const sp = this.cartesianToIso(gx * 1.75, gy * 1.75);
+      this.addDashedGhostEllipse(sp.x, sp.y, 26, 13);
+      this.rockSlots.push({ x: sp.x, y: sp.y, filled: false, index: i });
+    });
+
+    const cx = gw / 2;
+    this.add
+      .text(cx, 22, 'Preparing the Fire Site', {
         fontSize: '20px',
         color: '#e8dcc8',
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(1000);
     this.add
-      .text(cx, 52, 'Clear all dry fuel first. Then place each rock on a ghost ring.', {
-        fontSize: '14px',
+      .text(cx, 46, 'Clear all dry fuel first. Then place each rock on a ghost ring.', {
+        fontSize: '13px',
         color: '#b8a090',
         align: 'center',
-        wordWrap: { width: GAME_WIDTH - 40 },
+        wordWrap: { width: gw - 40 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(1000);
 
-    // 底部对话框
     this.prepDialog = this.add
-      .text(cx, GAME_HEIGHT - 62, 'Move leaves and twigs off the bare soil.', {
+      .text(cx, gh - 62, 'Move leaves and twigs off the bare soil.', {
         fontSize: '15px',
         color: '#f5e6d3',
         align: 'center',
-        wordWrap: { width: GAME_WIDTH - 48 },
+        wordWrap: { width: gw - 48 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(1000);
 
-    // 周边绿色长条：低矮树枝 / 灌木（可点击检查）
-    const bushStyle = { color: 0x2d6b3a, alpha: 0.92 };
-    const bushes = [
-      this.add.rectangle(cx, 118, 280, 22, bushStyle.color, bushStyle.alpha),
-      this.add.rectangle(cx, GAME_HEIGHT - 118, 280, 22, bushStyle.color, bushStyle.alpha),
-      this.add.rectangle(118, cy, 22, 200, bushStyle.color, bushStyle.alpha),
-      this.add.rectangle(GAME_WIDTH - 118, cy, 22, 200, bushStyle.color, bushStyle.alpha),
-    ];
-    bushes.forEach((b) => {
-      b.setDepth(4);
-      b.setStrokeStyle(1, 0x1a4028, 0.8);
-      b.setInteractive({ useHandCursor: true });
-      b.on('pointerdown', () => {
-        this.prepDialog.setText(
-          '...Close enough to catch if the fire grows.'
-        );
-      });
-    });
-
-    // ---------- 碎屑（叶子 / 细枝）：可拖拽；松手后淡出清除 ----------
     const debrisTotal = Phaser.Math.Between(10, 15);
     this.debrisRemaining = debrisTotal;
     this.slotsFilled = 0;
     this.prepComplete = false;
 
     const debrisPieces = [];
-    for (let i = 0; i < debrisTotal; i++) {
-      const px = Phaser.Math.Between(260, 540);
-      const py = Phaser.Math.Between(200, 400);
-      const piece = this.add.rectangle(px, py, Phaser.Math.Between(10, 18), Phaser.Math.Between(6, 12), 0x5c3d2a);
+    let safety = 0;
+    while (debrisPieces.length < debrisTotal && safety < 80) {
+      safety += 1;
+      const gx = Phaser.Math.FloatBetween(-2.8, 2.8);
+      const gy = Phaser.Math.FloatBetween(-1.8, 2.6);
+      if (Math.hypot(gx, gy) < 1.1) continue;
+      const pos = this.cartesianToIso(gx, gy);
+      const piece = this.add.rectangle(
+        pos.x,
+        pos.y,
+        Phaser.Math.Between(9, 15),
+        Phaser.Math.Between(5, 10),
+        0x5c3d2a
+      );
       piece.setStrokeStyle(1, 0x3d2815, 0.9);
-      piece.rotation = Phaser.Math.FloatBetween(-0.6, 0.6);
+      piece.rotation = Phaser.Math.FloatBetween(-0.55, 0.55);
       piece.setData('type', 'debris');
-      piece.setDepth(8);
+      this.setDepthFromY(piece);
       piece.setInteractive({ draggable: true, useHandCursor: true });
       this.input.setDraggable(piece);
       debrisPieces.push(piece);
     }
 
-    // ---------- 边缘 6 颗石头，对应 6 个槽位 ----------
-    const rockPositions = [
-      [64, 96],
-      [GAME_WIDTH - 64, 96],
-      [64, GAME_HEIGHT - 96],
-      [GAME_WIDTH - 64, GAME_HEIGHT - 96],
-      [cx, 84],
-      [cx, GAME_HEIGHT - 84],
+    const rockHomeGrids = [
+      [-4.8, -1.1],
+      [4.8, -1.1],
+      [-4.6, 2.4],
+      [4.6, 2.4],
+      [0, -3.4],
+      [0, 3.5],
     ];
-    rockPositions.forEach(([rx, ry], idx) => {
-      const r = this.add.circle(rx, ry, 22, 0x7a7a7a);
-      r.setDepth(15);
-      r.setStrokeStyle(2, 0x4a4a4a);
-      r.setData('type', 'rock');
-      r.setData('placed', false);
-      r.setData('slotIndex', null);
-      r.setData('rockId', idx);
-      r.setInteractive({ draggable: true, useHandCursor: true });
-      this.input.setDraggable(r);
+    rockHomeGrids.forEach(([gx, gy], idx) => {
+      const pos = this.cartesianToIso(gx, gy);
+      const rock = this.createHexRock(pos.x, pos.y, 21);
+      rock.setData('type', 'rock');
+      rock.setData('placed', false);
+      rock.setData('slotIndex', null);
+      rock.setData('rockId', idx);
+      this.setDepthFromY(rock);
+      this.input.setDraggable(rock);
     });
 
-    // ========== 【拖拽逻辑】全局 drag：更新被拖动物体的位置（碎屑与未锁定的石头） ==========
     this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
       if (!gameObject || !gameObject.active) return;
       if (gameObject.getData('placed')) return;
       gameObject.x = dragX;
       gameObject.y = dragY;
+      this.setDepthFromY(gameObject);
     });
 
-    // ========== 【拖拽逻辑】碎屑淡出：alpha 渐变后销毁 ==========
     const fadeOutDebris = (piece) => {
       if (!piece || !piece.active || piece.getData('gone')) return;
       piece.setData('gone', true);
@@ -173,7 +414,6 @@ class FireSitePrepScene extends Phaser.Scene {
       });
     };
 
-    // ========== 【拖拽逻辑】dragend：碎屑淡出；石头检测槽位磁吸 ==========
     this.input.on('dragend', (pointer, gameObject) => {
       if (!gameObject || !gameObject.active) return;
       if (gameObject.getData('type') === 'debris') {
@@ -183,7 +423,6 @@ class FireSitePrepScene extends Phaser.Scene {
       if (gameObject.getData('type') !== 'rock') return;
       if (gameObject.getData('placed')) return;
 
-      // 未清完碎屑时不允许落槽，并给出教学提示
       if (this.debrisRemaining > 0) {
         let best = null;
         let bestD = Infinity;
@@ -196,14 +435,11 @@ class FireSitePrepScene extends Phaser.Scene {
           }
         });
         if (best && bestD < SNAP_PX) {
-          this.prepDialog.setText(
-            'I should clear the dry debris first before building the ring.'
-          );
+          this.prepDialog.setText('I should clear the dry debris first before building the ring.');
         }
         return;
       }
 
-      // 已清完叶子：寻找 50px 内最近的空槽并吸附
       let targetSlot = null;
       let nearest = Infinity;
       this.rockSlots.forEach((s) => {
@@ -229,12 +465,13 @@ class FireSitePrepScene extends Phaser.Scene {
           duration: 220,
           ease: 'Cubic.easeOut',
           onComplete: () => {
-            gameObject.setFillStyle(0x3d3d42);
-            gameObject.setStrokeStyle(2, 0x2a2a30);
+            gameObject.setFillStyle(0x3d3d46);
+            gameObject.setStrokeStyle(2, 0x2a2a32, 1);
+            this.setDepthFromY(gameObject);
             this.tweens.add({
               targets: gameObject,
-              scaleX: 1.14,
-              scaleY: 1.14,
+              scaleX: 1.08,
+              scaleY: 1.08,
               duration: 90,
               yoyo: true,
               ease: 'Sine.easeOut',
@@ -251,21 +488,20 @@ class FireSitePrepScene extends Phaser.Scene {
       }
     });
 
-    // ========== 【拖拽逻辑】碎屑：在物体上轻点也触发淡出 ==========
     debrisPieces.forEach((piece) => {
       piece.on('pointerup', () => fadeOutDebris(piece));
     });
 
-    // Next：默认半透明且不可点，通关后高亮可点
     this.nextMaterialsBtn = this.add
-      .text(cx, GAME_HEIGHT - 120, 'Next: Collect Materials', {
+      .text(cx, gh - 120, 'Next: Collect Materials', {
         fontSize: '18px',
         color: '#fff8e7',
         backgroundColor: '#4a6b3a',
         padding: { x: 18, y: 10 },
       })
       .setOrigin(0.5)
-      .setAlpha(0.38);
+      .setAlpha(0.38)
+      .setDepth(1000);
     this.nextMaterialsBtn.setInteractive({ useHandCursor: true });
     this.nextMaterialsBtn.disableInteractive();
 
@@ -290,7 +526,6 @@ class FireSitePrepScene extends Phaser.Scene {
     this.updateNextButtonState();
   }
 
-  /** Next 按钮：未完成时保持半透明并禁止点击 */
   updateNextButtonState() {
     if (!this.nextMaterialsBtn || this.prepComplete) return;
     const ready =
@@ -320,6 +555,11 @@ class FireSitePrepScene extends Phaser.Scene {
 class CollectMaterialsScene extends Phaser.Scene {
   constructor() {
     super({ key: 'CollectMaterialsScene' });
+  }
+
+  preload() {
+    // 加载背包图片
+    this.load.image('backpack', 'assets/backpack.png');
   }
 
   /** 根据类型生成不同几何外观（色块代替贴图） */
@@ -386,7 +626,7 @@ class CollectMaterialsScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(10);
     this.add
-      .text(GAME_WIDTH / 2, 52, 'Tap dry fuel to stash it. Avoid wet wood.', {
+      .text(GAME_WIDTH / 2, 52, 'Collect materials, then click the backpack to sort.', {
         fontSize: '13px',
         color: '#b8c4ae',
         align: 'center',
@@ -475,24 +715,25 @@ class CollectMaterialsScene extends Phaser.Scene {
 
   showOpenBackpackButton() {
     if (this.openPackBtn) return;
-    const cx = GAME_WIDTH / 2;
-    this.openPackBtn = this.add
-      .text(cx, GAME_HEIGHT - 118, 'Open Backpack to Sort', {
-        fontSize: '18px',
-        color: '#fff8e7',
-        backgroundColor: '#4a5d7a',
-        padding: { x: 20, y: 11 },
-      })
-      .setOrigin(0.5)
-      .setDepth(12)
-      .setInteractive({ useHandCursor: true });
+    // 创建背包按钮（右上角小图标，点击打开分类 UI）
+    const ICON_SCALE = 0.1;
+    this.openPackBtn = this.add.image(720, 80, 'backpack').setDepth(100).setScale(ICON_SCALE);
 
-    this.openPackBtn.on('pointerover', () =>
-      this.openPackBtn.setStyle({ backgroundColor: '#5d7194' })
-    );
-    this.openPackBtn.on('pointerout', () =>
-      this.openPackBtn.setStyle({ backgroundColor: '#4a5d7a' })
-    );
+    // 交互区域与缩放后的显示尺寸一致（避免仍按原图大小命中）
+    const hw = this.openPackBtn.displayWidth / 2;
+    const hh = this.openPackBtn.displayHeight / 2;
+    this.openPackBtn.setInteractive({
+      hitArea: new Phaser.Geom.Rectangle(-hw, -hh, this.openPackBtn.displayWidth, this.openPackBtn.displayHeight),
+      hitAreaCallback: Phaser.Geom.Rectangle.Contains,
+      useHandCursor: true,
+    });
+
+    this.openPackBtn.on('pointerover', () => {
+      this.openPackBtn.setScale(ICON_SCALE * 1.08);
+    });
+    this.openPackBtn.on('pointerout', () => {
+      this.openPackBtn.setScale(ICON_SCALE);
+    });
 
     // 打开背包分类界面：并行启动 Sorting 场景并暂停收集场景（平滑过渡）
     this.openPackBtn.on('pointerdown', () => {
