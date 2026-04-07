@@ -4,6 +4,52 @@
  */
 
 // ============================================================
+// BG0TitleScene — 标题场景（书桌背景 + 笔记本封面，点击进入序章）
+// ============================================================
+class BG0TitleScene extends Phaser.Scene {
+  constructor() { super({ key: 'BG0TitleScene' }); }
+
+  preload() {
+    this.load.image('bg_title', 'assets/Scene 0.JPG');
+  }
+
+  create() {
+    // 背景铺满
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'bg_title')
+      .setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
+
+    // "Click to open" 提示文字
+    const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.82, 'Click to open', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '20px',
+      color: '#f5e6d3',
+    }).setOrigin(0.5);
+
+    // 脉冲 tween
+    this.tweens.add({
+      targets: hint,
+      alpha: { from: 0.5, to: 1 },
+      duration: 900,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // 点击整个场景 → fadeOut → 进 BG1
+    let clicked = false;
+    this.input.on('pointerdown', () => {
+      if (clicked) return;
+      clicked = true;
+      this.cameras.main.fadeOut(500, 0, 0, 0);
+      this.time.delayedCall(500, () => {
+        this.scene.start(SCENE_KEYS.BG1);
+      });
+    });
+  }
+}
+
+
+// ============================================================
 // 全局辅助函数：createDialogBox(scene)
 // 在场景底部创建半透明对话框 + typewriter 控制器
 // 返回 { say, clear, bg, text, arrow }
@@ -157,19 +203,21 @@ function _runLines(lines, dialog, scene, onFinished) {
 class BG1OutbreakScene extends Phaser.Scene {
   constructor() { super({ key: 'BG1OutbreakScene' }); }
 
+  preload() {
+    this.load.image('bg_bg1', 'assets/Scene 1.JPG');
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor('#1a1008');
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
-    // 背景色块占位
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a1008);
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'bg_bg1').setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
 
     const dialog = createDialogBox(this);
 
     const lines = [
-      'March 5, 1898.',
-      'Crimson Fever has claimed over a hundred lives this week.',
-      'My clinic is overflowing. I watch neighbors fall… powerless to stop it.',
+      'It begins…',
+      'My clinic is overflowing. I cannot save them all.',
+      'I watch neighbors and friends fall, powerless to stop it.',
     ];
 
     _runLines(lines, dialog, this, () => {
@@ -187,11 +235,14 @@ class BG1OutbreakScene extends Phaser.Scene {
 class BG2StruggleScene extends Phaser.Scene {
   constructor() { super({ key: 'BG2StruggleScene' }); }
 
+  preload() {
+    this.load.image('bg_bg2', 'assets/Scene 2.JPG');
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor('#0e1208');
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0e1208);
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'bg_bg2').setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
 
     const dialog = createDialogBox(this);
 
@@ -216,11 +267,14 @@ class BG2StruggleScene extends Phaser.Scene {
 class BG3DiscoveryScene extends Phaser.Scene {
   constructor() { super({ key: 'BG3DiscoveryScene' }); }
 
+  preload() {
+    this.load.image('bg_bg3', 'assets/Scene 3.JPG');
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor('#0a1015');
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0a1015);
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'bg_bg3').setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
 
     const dialog = createDialogBox(this);
 
@@ -285,11 +339,15 @@ class BG4TimeTravelScene extends Phaser.Scene {
 class AR1ArrivedScene extends Phaser.Scene {
   constructor() { super({ key: 'AR1ArrivedScene' }); }
 
+  preload() {
+    this.load.image('bg_village', 'assets/Village1.png');
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor('#c8a96e');
     this.cameras.main.fadeIn(800, 0, 0, 0);
 
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xc8a96e);
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'bg_village')
+      .setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
 
     // 右上角倒计时占位
     this.add.text(GAME_WIDTH - 20, 20, 'Day 1 / 30', {
