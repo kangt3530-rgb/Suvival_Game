@@ -22,12 +22,17 @@
       overflow: hidden;
       background: #3d2817;
     }
+    #game canvas {
+      image-rendering: auto;
+      -ms-interpolation-mode: bicubic;
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
 <div id="game"></div>
 <!-- 仅 4 个主脚本：阶段化 Scene 文件 → MainConfig 统一注册与启动 -->
+<script src="js/Scene0_Background.js"></script>
 <script src="js/Scene1_Forest.js"></script>
 <script src="js/Scene4_Fire.js"></script>
 <script src="js/Scene7_Herbs.js"></script>

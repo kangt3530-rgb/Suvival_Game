@@ -6,14 +6,21 @@
  */
 
 // ---------- 逻辑分辨率（800×600，经 Scale.FIT 铺满浏览器；使用 var 保证多脚本全局可见） ----------
-var GAME_WIDTH = 800;
-var GAME_HEIGHT = 600;
+var GAME_WIDTH = 1920;
+var GAME_HEIGHT = 800;
 
 /**
  * Phaser 场景注册键 — 与各类 constructor 中 super({ key }) 一致
  * 所有 this.scene.start / launch / pause 等均应通过此处常量跳转
  */
 var SCENE_KEYS = {
+  BG1: 'BG1OutbreakScene',
+  BG2: 'BG2StruggleScene',
+  BG3: 'BG3DiscoveryScene',
+  BG4: 'BG4TimeTravelScene',
+  AR1: 'AR1ArrivedScene',
+  AR2: 'AR2BackpackScene',
+  AR3: 'AR3ForestScene',
   CAMP: 'CampSelectScene',
   NPC: 'NpcScene',
   FIRE_SPOT: 'FireSpotScene',
@@ -29,6 +36,7 @@ var SCENE_KEYS = {
 var PHASER_GAME_CONFIG = {
   type: Phaser.AUTO,
   backgroundColor: '#3d2817',
+  resolution: window.devicePixelRatio || 1,
   scale: {
     parent: 'game',
     mode: Phaser.Scale.FIT,
@@ -37,6 +45,13 @@ var PHASER_GAME_CONFIG = {
     height: GAME_HEIGHT,
   },
   scene: [
+    BG1OutbreakScene,
+    BG2StruggleScene,
+    BG3DiscoveryScene,
+    BG4TimeTravelScene,
+    AR1ArrivedScene,
+    AR2BackpackScene,
+    AR3ForestScene,
     CampSelectScene,
     NpcScene,
     FireSpotScene,
