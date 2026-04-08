@@ -223,8 +223,54 @@ class FirebuildingNpcScene extends Phaser.Scene {
     this.nextBtn.on('pointerdown', () => this.advanceDialog());
 
     this.choiceRowY = h - 118;
-    this.step = 0;
-    this.advanceDialog();
+    const npcBoot = this.sys.settings.data || {};
+    const herb = FIREBUILDING_HERB_NAME;
+    if (npcBoot.animPlayed) {
+      this.step = 0;
+      this.advanceDialog();
+    } else if (
+      npcBoot.npcStep === 3 &&
+      (npcBoot.npcChoice === 'a' || npcBoot.npcChoice === 'b')
+    ) {
+      this.step = 3;
+      this._npcChoice = npcBoot.npcChoice;
+      if (npcBoot.npcChoice === 'a') {
+        this.dialogText.setText('Traveler: "Fire isn\'t the danger… where you put it is."');
+      } else {
+        this.dialogText.setText(
+          'Traveler: "Wind, ground, what\'s around you… that decides everything."'
+        );
+      }
+      this.nextBtn.off('pointerdown');
+      this.nextBtn.on('pointerdown', () => this.advanceDialog());
+    } else if (npcBoot.npcStep === 4) {
+      this.step = 4;
+      this.dialogText.setText(
+        `(You): "Also… I need to ask — do you know where to find ${herb}?"\n\nTraveler: "Ah… ${herb}? They grow around here, but you\'ll want to watch for them in the dark." "They have a way of standing out under the light of a fire."`
+      );
+      this.nextBtn.off('pointerdown');
+      this.nextBtn.on('pointerdown', () => this.advanceDialog());
+    } else if (
+      typeof npcBoot.npcStep === 'number' &&
+      npcBoot.npcStep >= 1 &&
+      npcBoot.npcStep <= 2
+    ) {
+      this.step = npcBoot.npcStep;
+      this.animPlayed = false;
+      if (npcBoot.npcStep === 1) {
+        this.dialogText.setText('Traveler: "You\'re not from around here, are you?"');
+      } else {
+        this.dialogText.setText(
+          'Traveler: "If you\'re staying the night, don\'t rush your fire. Most people get that part wrong."'
+        );
+      }
+      this.nextBtn.off('pointerdown');
+      this.nextBtn.on('pointerdown', () => this.advanceDialog());
+    } else {
+      this.step = 0;
+      this.advanceDialog();
+    }
+    addSceneBackButton(this);
   }
 
   advanceDialog() {
@@ -290,6 +336,7 @@ class FirebuildingNpcScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     const pick = (which) => {
+      this._npcChoice = which;
       if (this.choiceA) {
         this.choiceA.destroy();
         this.choiceA = null;
@@ -379,8 +426,16 @@ class FirebuildingNpcScene extends Phaser.Scene {
     this.nextBtn.disableInteractive();
     this.cameras.main.fadeOut(500, 0, 0, 0);
     this.time.delayedCall(500, () => {
-      this.scene.start(SCENE_KEYS.FIRE_SPOT_INSPECT);
+      transitionScene(this, SCENE_KEYS.FIRE_SPOT_INSPECT);
     });
+  }
+
+  getResumePayload() {
+    return {
+      npcStep: this.step,
+      animPlayed: !!this.animPlayed,
+      npcChoice: this._npcChoice === 'a' || this._npcChoice === 'b' ? this._npcChoice : undefined,
+    };
   }
 }
 
@@ -404,7 +459,7 @@ class FireSpotInspectScene extends Phaser.Scene {
     FireIso.drawGround(this, this.isoC);
 
     const p0 = FireIso.cartesianToIso(this.isoC, -1.2, 0.6);
-    this.playerDot = this.add.circle(p0.x, p0.y, 20, 0xffffff).setDepth(2000);
+    this.playerDot = this.add.circle(p0.x, p0.y, 20, 0xffffff).setDepth(WORLD_PLAYER_MARKER_DEPTH);
 
     this.dialogBg = this.add
       .rectangle(cw / 2, ch - 65, cw - 28, 130, 0x000000, 0.72)
@@ -424,6 +479,9 @@ class FireSpotInspectScene extends Phaser.Scene {
 
     this.introStep = 0;
     this.zonesEnabled = false;
+
+    const boot = this.sys.settings.data || {};
+    const hasInspectResume = typeof boot.introStep === 'number';
 
     this.nextBtn = this.add
       .text(cw / 2, ch - 35, 'Next', {
@@ -554,7 +612,7 @@ class FireSpotInspectScene extends Phaser.Scene {
           wordWrap: { width: 160 },
         })
         .setOrigin(0.5, 0)
-        .setDepth(ctr.y + 2);
+        .setDepth(WORLD_UI_LABEL_DEPTH);
 
       const minX = Math.min(c.tl.x, c.tr.x, c.br.x, c.bl.x, lbl.x - 80);
       const maxX = Math.max(c.tl.x, c.tr.x, c.br.x, c.bl.x, lbl.x + 80);
@@ -582,7 +640,64 @@ class FireSpotInspectScene extends Phaser.Scene {
     });
 
     this.lastInspectedSpotId = null;
-    this.advanceIntro();
+    if (hasInspectResume) {
+      this.introStep = boot.introStep;
+      this.zonesEnabled = !!boot.zonesEnabled;
+      this.applyInspectResumeUi();
+    } else {
+      this.advanceIntro();
+    }
+    addSceneBackButton(this);
+  }
+
+  applyInspectResumeUi() {
+    const cw = this.cameras.main.width;
+    const ch = this.cameras.main.height;
+    if (this.zonesEnabled) {
+      this.dialogText.setText('Tap each area to inspect.');
+      this.nextBtn.setVisible(false).disableInteractive();
+      this.tweens.add({ targets: this.hintText, alpha: 1, duration: 200 });
+      this.hintText.setText('Inspect: low branches · dry grass · near your gear · open ground');
+      this.continueBtn.setAlpha(1);
+      this.continueBtn.setInteractive({ useHandCursor: true });
+      this.zonesEnabled = true;
+      return;
+    }
+    if (this.introStep >= 2) {
+      this.dialogText.setText(
+        '…I need to think about where it will spread, not just where it starts.'
+      );
+      return;
+    }
+    if (this.introStep >= 1) {
+      this.dialogText.setText('If I\'m building a fire here…');
+    }
+  }
+
+  getResumePayload() {
+    return { introStep: this.introStep, zonesEnabled: this.zonesEnabled };
+  }
+
+  tryConsumeInternalBack() {
+    if (this.zonesEnabled) {
+      this.zonesEnabled = false;
+      this.introStep = 2;
+      this.hintText.setAlpha(0);
+      this.continueBtn.setAlpha(0).disableInteractive();
+      this.nextBtn.setVisible(true).setInteractive({ useHandCursor: true });
+      this.dialogText.setText(
+        '…I need to think about where it will spread, not just where it starts.'
+      );
+      return true;
+    }
+    if (this.introStep > 1) {
+      this.introStep -= 1;
+      if (this.introStep === 1) {
+        this.dialogText.setText('If I\'m building a fire here…');
+      }
+      return true;
+    }
+    return false;
   }
 
   isoTileCorners(cartX, cartY, size) {
@@ -609,7 +724,7 @@ class FireSpotInspectScene extends Phaser.Scene {
       duration: dur,
       ease: 'Sine.easeInOut',
       onComplete: () => {
-        this.playerDot.setDepth(2000);
+        this.playerDot.setDepth(WORLD_PLAYER_MARKER_DEPTH);
         if (onComplete) onComplete();
       },
     });
@@ -678,7 +793,7 @@ class FireSpotInspectScene extends Phaser.Scene {
     this.continueBtn.disableInteractive();
     this.cameras.main.fadeOut(450, 0, 0, 0);
     this.time.delayedCall(450, () => {
-      this.scene.start(SCENE_KEYS.FIRE_PREP);
+      transitionScene(this, SCENE_KEYS.FIRE_PREP);
     });
   }
 }
@@ -1336,11 +1451,12 @@ class FireSitePrepScene extends Phaser.Scene {
       this.nextMaterialsBtn.disableInteractive().setAlpha(0.55);
       this.cameras.main.fadeOut(450, 0, 0, 0);
       this.time.delayedCall(450, () => {
-        this.scene.start(SCENE_KEYS.COLLECT);
+        transitionScene(this, SCENE_KEYS.COLLECT);
       });
     });
 
     this.startPrepIntro();
+    addSceneBackButton(this);
   }
 
   updateNextButtonState() {
@@ -2002,6 +2118,7 @@ class CollectMaterialsScene extends Phaser.Scene {
 
     this.openPackBtn = this.backpackIcon;
     this.startCollectIntro();
+    addSceneBackButton(this);
   }
 
   /** 收满 8 件有效物后，禁止继续点击地面剩余物件 */
@@ -2013,6 +2130,10 @@ class CollectMaterialsScene extends Phaser.Scene {
         g.setAlpha(0.45);
       }
     });
+  }
+
+  getResumePayload() {
+    return {};
   }
 }
 // ---------- Scene 4-1：Sorting Materials（背包分类 UI） ----------
@@ -2259,7 +2380,7 @@ class SortingMaterialsScene extends Phaser.Scene {
           fontStyle: 'bold',
         })
         .setOrigin(0.5, 0)
-        .setDepth(24);
+        .setDepth(ISO_GAMEPLAY_LABEL_DEPTH);
       this.add
         .text(z.x, z.y - 34, z.blurb, {
           fontSize: '11px',
@@ -2268,7 +2389,7 @@ class SortingMaterialsScene extends Phaser.Scene {
           wordWrap: { width: z.w - 8 },
         })
         .setOrigin(0.5, 0)
-        .setDepth(24);
+        .setDepth(ISO_GAMEPLAY_LABEL_DEPTH);
     });
 
     const pileCx = 198;
@@ -2476,10 +2597,7 @@ class SortingMaterialsScene extends Phaser.Scene {
       .setInteractive({ useHandCursor: true });
 
     this.constructBtn.on('pointerdown', () => {
-      this.registry.set('fireSortComplete', true);
-      this.scene.stop(SCENE_KEYS.COLLECT);
-      this.scene.stop(SCENE_KEYS.SORTING);
-      this.scene.start(SCENE_KEYS.CONSTRUCT);
+      transitionToConstructFromSortingComplete(this);
     });
   }
 
@@ -2764,6 +2882,7 @@ class ConstructFireScene extends Phaser.Scene {
     this.constructGameplayActive = false;
 
     if (!this.registry.get('fireSortComplete')) {
+      /** 未排序完成时回到收集：不压栈，避免 Construct 残留在栈顶 */
       this.scene.start(SCENE_KEYS.COLLECT);
       return;
     }
@@ -2925,7 +3044,7 @@ class ConstructFireScene extends Phaser.Scene {
           wordWrap: { width: 168 },
         })
         .setOrigin(0.5)
-        .setDepth(pileDepth + 2);
+        .setDepth(ISO_GAMEPLAY_LABEL_DEPTH);
     });
 
     this.materialPiles.forEach((rect) => {
@@ -2967,7 +3086,7 @@ class ConstructFireScene extends Phaser.Scene {
       this.skipBtn.disableInteractive();
       this.cameras.main.fadeOut(450, 0, 0, 0);
       this.time.delayedCall(450, () => {
-        this.scene.start(SCENE_KEYS.MAINTAIN);
+        transitionScene(this, SCENE_KEYS.MAINTAIN);
       });
     });
 
@@ -3030,6 +3149,7 @@ class ConstructFireScene extends Phaser.Scene {
     });
 
     this.startConstructIntro();
+    addSceneBackButton(this);
   }
 
   /** 正确铺好 tinder 后：底层柔光高亮（示意“第一层就绪”） */
@@ -3187,7 +3307,7 @@ class ConstructFireScene extends Phaser.Scene {
       this.strikeBtn.disableInteractive().setAlpha(0.55);
       this.cameras.main.fadeOut(450, 0, 0, 0);
       this.time.delayedCall(450, () => {
-        this.scene.start(SCENE_KEYS.MAINTAIN);
+        transitionScene(this, SCENE_KEYS.MAINTAIN);
       });
     });
   }
@@ -3590,6 +3710,7 @@ class MaintainFireScene extends Phaser.Scene {
         this.mainDialog.setText('The flame is fragile. Feed it small sticks first.');
       }
     });
+    addSceneBackButton(this);
   }
 
   toggleBackpackMenu(bx, by) {
@@ -4076,7 +4197,7 @@ class MaintainFireScene extends Phaser.Scene {
       continueBtn.disableInteractive().setAlpha(0.55);
       this.cameras.main.fadeOut(550, 0, 0, 0);
       this.time.delayedCall(550, () => {
-        this.scene.start(SCENE_KEYS.HERBS);
+        transitionScene(this, SCENE_KEYS.HERBS);
       });
     });
   }
@@ -4174,7 +4295,7 @@ class HerbHuntScene extends Phaser.Scene {
         color: '#6a7a68',
       })
       .setOrigin(0.5)
-      .setDepth(49);
+      .setDepth(ISO_GAMEPLAY_LABEL_DEPTH);
   }
 
   /** 炭火堆（开场与玩法共用，只创建一次） */
@@ -4209,7 +4330,7 @@ class HerbHuntScene extends Phaser.Scene {
         color: '#9a9a88',
       })
       .setOrigin(0.5)
-      .setDepth(93);
+      .setDepth(ISO_GAMEPLAY_LABEL_DEPTH);
   }
 
   /**
@@ -4245,7 +4366,7 @@ class HerbHuntScene extends Phaser.Scene {
         wordWrap: { width: GAME_WIDTH - 48 },
       })
       .setOrigin(0.5)
-      .setDepth(110);
+      .setDepth(ISO_GAMEPLAY_LABEL_DEPTH);
 
     this.firePitZone.on('pointerdown', () => {
       if (this.herbOpeningLit || this.herbGameplayActive) return;
@@ -4497,6 +4618,7 @@ class HerbHuntScene extends Phaser.Scene {
         this.torchStick.setPosition(pointer.x - 14, pointer.y + 6);
       }
     });
+    addSceneBackButton(this);
   }
 
   snapHerbDialogLayout() {
@@ -4623,7 +4745,7 @@ class HerbHuntScene extends Phaser.Scene {
       this.input.setDefaultCursor('default');
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.time.delayedCall(500, () => {
-        this.scene.start(SCENE_KEYS.BG0);
+        goToTitleScene(this);
       });
     });
   }

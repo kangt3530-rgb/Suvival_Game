@@ -23,7 +23,9 @@ class BG0TitleScene extends Phaser.Scene {
       fontFamily: 'Georgia, serif',
       fontSize: '20px',
       color: '#f5e6d3',
-    }).setOrigin(0.5);
+    })
+      .setOrigin(0.5)
+      .setDepth(5000);
 
     // 脉冲 tween
     this.tweens.add({
@@ -42,9 +44,10 @@ class BG0TitleScene extends Phaser.Scene {
       clicked = true;
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.time.delayedCall(500, () => {
-        this.scene.start(SCENE_KEYS.BG1);
+        transitionScene(this, SCENE_KEYS.BG1);
       });
     });
+    addSceneBackButton(this);
   }
 }
 
@@ -63,6 +66,8 @@ function createDialogBox(scene) {
   // 半透明底色
   const bg = scene.add.rectangle(boxX, boxY, boxW, boxH, 0x000000, 0.62);
   bg.setStrokeStyle(1, 0x5c4033, 0.8);
+  const DBOX_Z = 5000;
+  bg.setDepth(DBOX_Z);
 
   // 对话文字
   const txt = scene.add.text(
@@ -77,6 +82,7 @@ function createDialogBox(scene) {
       lineSpacing: 4,
     }
   );
+  txt.setDepth(DBOX_Z + 1);
 
   // 右下角闪烁 ▼ 提示符
   const arrow = scene.add
@@ -85,7 +91,8 @@ function createDialogBox(scene) {
       fontSize: '14px',
       color: '#c4a882',
     })
-    .setAlpha(0);
+    .setAlpha(0)
+    .setDepth(DBOX_Z + 2);
 
   // 闪烁 tween（始终运行，通过 alpha 初始值控制显隐）
   scene.tweens.add({
@@ -166,34 +173,60 @@ function createDialogBox(scene) {
 // scene      — 当前 Phaser.Scene
 // onFinished — 全部台词走完后的回调
 // ============================================================
-function _runLines(lines, dialog, scene, onFinished) {
-  let index = 0;
-  let ready = false; // typewriter 完成、等待点击
+/**
+ * @param {{ startLine?: number }} [resume] startLine：恢复时从第几句开始（0-based）；≥ lines.length 表示台词已读完，仅再点一次执行 onFinished（用于 Back 回到「读完前一刻」）
+ */
+function _runLines(lines, dialog, scene, onFinished, resume) {
+  resume = resume || {};
+  let startLine = typeof resume.startLine === 'number' ? resume.startLine : 0;
+  let index = startLine;
+  let ready = false;
+  scene._dialogueLineIndex = index;
 
   function showLine(i) {
+    scene._dialogueLineIndex = i;
     ready = false;
-    dialog.say(lines[i], () => { ready = true; });
+    dialog.say(lines[i], () => {
+      ready = true;
+    });
   }
 
   function advance() {
     if (!ready) {
-      // 打字未完成：加速完成当前行
-      dialog.say(dialog.text.text + '', () => { ready = true; });
-      // 实际上 say() 会立刻 finishNow，直接标记
+      dialog.say(dialog.text.text + '', () => {
+        ready = true;
+      });
       ready = true;
       return;
     }
     index++;
+    scene._dialogueLineIndex = index;
     if (index < lines.length) {
       showLine(index);
     } else {
-      // 全部台词结束
       scene.input.off('pointerdown', advance);
+      scene._dialogueLineIndex = lines.length;
       onFinished();
     }
   }
 
-  showLine(0);
+  if (index >= lines.length) {
+    scene._dialogueLineIndex = lines.length;
+    dialog.say(lines[lines.length - 1], () => {
+      ready = true;
+    });
+    scene.input.on('pointerdown', function resumeAdvance() {
+      if (!ready) {
+        ready = true;
+        return;
+      }
+      scene.input.off('pointerdown', resumeAdvance);
+      onFinished();
+    });
+    return;
+  }
+
+  showLine(index);
   scene.input.on('pointerdown', advance);
 }
 
@@ -220,12 +253,24 @@ class BG1OutbreakScene extends Phaser.Scene {
       'I watch neighbors and friends fall, powerless to stop it.',
     ];
 
-    _runLines(lines, dialog, this, () => {
-      this.cameras.main.fadeOut(600, 0, 0, 0);
-      this.time.delayedCall(600, () => {
-        this.scene.start('BG2StruggleScene');
-      });
-    });
+    const boot = this.sys.settings.data || {};
+    _runLines(
+      lines,
+      dialog,
+      this,
+      () => {
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.time.delayedCall(600, () => {
+          transitionScene(this, SCENE_KEYS.BG2);
+        });
+      },
+      { startLine: typeof boot.startLine === 'number' ? boot.startLine : 0 }
+    );
+    addSceneBackButton(this);
+  }
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
   }
 }
 
@@ -252,12 +297,24 @@ class BG2StruggleScene extends Phaser.Scene {
       'Each failure weighs heavier. Yet I cannot give up.',
     ];
 
-    _runLines(lines, dialog, this, () => {
-      this.cameras.main.fadeOut(600, 0, 0, 0);
-      this.time.delayedCall(600, () => {
-        this.scene.start('BG3DiscoveryScene');
-      });
-    });
+    const boot = this.sys.settings.data || {};
+    _runLines(
+      lines,
+      dialog,
+      this,
+      () => {
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.time.delayedCall(600, () => {
+          transitionScene(this, SCENE_KEYS.BG3);
+        });
+      },
+      { startLine: typeof boot.startLine === 'number' ? boot.startLine : 0 }
+    );
+    addSceneBackButton(this);
+  }
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
   }
 }
 
@@ -284,12 +341,24 @@ class BG3DiscoveryScene extends Phaser.Scene {
       "The thought of saving lives gives me hope I haven't felt in years.",
     ];
 
-    _runLines(lines, dialog, this, () => {
-      this.cameras.main.fadeOut(600, 0, 0, 0);
-      this.time.delayedCall(600, () => {
-        this.scene.start('BG4TimeTravelScene');
-      });
-    });
+    const boot = this.sys.settings.data || {};
+    _runLines(
+      lines,
+      dialog,
+      this,
+      () => {
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.time.delayedCall(600, () => {
+          transitionScene(this, SCENE_KEYS.BG4);
+        });
+      },
+      { startLine: typeof boot.startLine === 'number' ? boot.startLine : 0 }
+    );
+    addSceneBackButton(this);
+  }
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
   }
 }
 
@@ -311,25 +380,36 @@ class BG4TimeTravelScene extends Phaser.Scene {
       'If only I had known this earlier…',
     ];
 
-    _runLines(lines, dialog, this, () => {
-      // 白光转场：顶层全屏白色矩形 alpha 0 → 1
-      const flash = this.add
-        .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xffffff)
-        .setAlpha(0)
-        .setDepth(999);
+    const boot = this.sys.settings.data || {};
+    _runLines(
+      lines,
+      dialog,
+      this,
+      () => {
+        const flash = this.add
+          .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xffffff)
+          .setAlpha(0)
+          .setDepth(999);
 
-      this.tweens.add({
-        targets: flash,
-        alpha: 1,
-        duration: 800,
-        ease: 'Cubic.easeIn',
-        onComplete: () => {
-          this.time.delayedCall(300, () => {
-            this.scene.start('AR1ArrivedScene');
-          });
-        },
-      });
-    });
+        this.tweens.add({
+          targets: flash,
+          alpha: 1,
+          duration: 800,
+          ease: 'Cubic.easeIn',
+          onComplete: () => {
+            this.time.delayedCall(300, () => {
+              transitionScene(this, SCENE_KEYS.AR1);
+            });
+          },
+        });
+      },
+      { startLine: typeof boot.startLine === 'number' ? boot.startLine : 0 }
+    );
+    addSceneBackButton(this);
+  }
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
   }
 }
 
@@ -355,7 +435,9 @@ class AR1ArrivedScene extends Phaser.Scene {
       color: '#3d2817',
       backgroundColor: '#f5e6d3',
       padding: { x: 6, y: 6 },
-    }).setOrigin(1, 0);
+    })
+      .setOrigin(1, 0)
+      .setDepth(5000);
 
     const dialog = createDialogBox(this);
 
@@ -365,12 +447,24 @@ class AR1ArrivedScene extends Phaser.Scene {
       'This means… I still have time to save them all.',
     ];
 
-    _runLines(lines, dialog, this, () => {
-      this.cameras.main.fadeOut(600, 0, 0, 0);
-      this.time.delayedCall(600, () => {
-        this.scene.start('AR2BackpackScene');
-      });
-    });
+    const boot = this.sys.settings.data || {};
+    _runLines(
+      lines,
+      dialog,
+      this,
+      () => {
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.time.delayedCall(600, () => {
+          transitionScene(this, SCENE_KEYS.AR2);
+        });
+      },
+      { startLine: typeof boot.startLine === 'number' ? boot.startLine : 0 }
+    );
+    addSceneBackButton(this);
+  }
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
   }
 }
 
@@ -433,6 +527,7 @@ class AR2BackpackScene extends Phaser.Scene {
     let ready = false;
 
     const showLine = (i) => {
+      this._ar2LineIndex = i;
       ready = false;
       dialog.say(lines[i], () => {
         ready = true;
@@ -441,21 +536,77 @@ class AR2BackpackScene extends Phaser.Scene {
     };
 
     const advance = () => {
-      if (!ready) { return; }
+      if (!ready) {
+        return;
+      }
       index++;
+      this._ar2LineIndex = index;
       if (index < lines.length) {
         showLine(index);
       } else {
         this.input.off('pointerdown', advance);
         this.cameras.main.fadeOut(600, 0, 0, 0);
         this.time.delayedCall(600, () => {
-          this.scene.start('AR3ForestScene');
+          transitionScene(this, SCENE_KEYS.AR3);
         });
       }
     };
 
-    showLine(0);
+    this._ar2Lines = lines;
+    this._ar2Dialog = dialog;
+    this._ar2ShowLine = showLine;
+    this._ar2Advance = advance;
+    this._ar2Notebook = notebook;
+    this._ar2Gear = gear;
+    this._ar2Bag = bag;
+
+    const boot = this.sys.settings.data || {};
+    const startIdx = typeof boot.ar2LineIndex === 'number' ? boot.ar2LineIndex : 0;
+    if (startIdx >= lines.length) {
+      let readyDone = false;
+      this._ar2LineIndex = lines.length;
+      dialog.say(lines[lines.length - 1], () => {
+        readyDone = true;
+      });
+      openBag();
+      const finishAr2 = () => {
+        if (!readyDone) {
+          return;
+        }
+        this.input.off('pointerdown', finishAr2);
+        this.cameras.main.fadeOut(600, 0, 0, 0);
+        this.time.delayedCall(600, () => {
+          transitionScene(this, SCENE_KEYS.AR3);
+        });
+      };
+      this.input.on('pointerdown', finishAr2);
+      addSceneBackButton(this);
+      return;
+    }
+
+    index = startIdx;
+    this._ar2LineIndex = index;
+    showLine(index);
     this.input.on('pointerdown', advance);
+    addSceneBackButton(this);
+  }
+
+  getResumePayload() {
+    return { ar2LineIndex: this._ar2LineIndex != null ? this._ar2LineIndex : 0 };
+  }
+
+  tryConsumeInternalBack() {
+    if (this._ar2LineIndex == null || this._ar2LineIndex <= 0) return false;
+    this.input.off('pointerdown', this._ar2Advance);
+    this._ar2LineIndex--;
+    const i = this._ar2LineIndex;
+    if (i < 1) {
+      this._ar2Notebook.setAlpha(0);
+      this._ar2Gear.setAlpha(0);
+    }
+    this._ar2ShowLine(i);
+    this.input.on('pointerdown', this._ar2Advance);
+    return true;
   }
 }
 
@@ -485,7 +636,10 @@ class AR3ForestScene extends Phaser.Scene {
       "I'll have to search the forest… and beyond.",
     ];
 
-    _runLines(lines, dialog, this, () => {
+    const boot = this.sys.settings.data || {};
+    const sl = typeof boot.startLine === 'number' ? boot.startLine : 0;
+
+    const runWalkToCamp = () => {
       this.tweens.add({
         targets: player,
         x: forestX,
@@ -494,10 +648,30 @@ class AR3ForestScene extends Phaser.Scene {
         onComplete: () => {
           this.cameras.main.fadeOut(600, 0, 0, 0);
           this.time.delayedCall(600, () => {
-            this.scene.start('CampSelectScene');
+            transitionScene(this, SCENE_KEYS.CAMP);
           });
         },
       });
-    });
+    };
+
+    if (sl >= lines.length) {
+      this._dialogueLineIndex = lines.length;
+      player.setPosition(forestX, GAME_HEIGHT / 2);
+      dialog.say(lines[lines.length - 1], () => {});
+      const toCamp = () => {
+        this.input.off('pointerdown', toCamp);
+        runWalkToCamp();
+      };
+      this.input.once('pointerdown', toCamp);
+      addSceneBackButton(this);
+      return;
+    }
+
+    _runLines(lines, dialog, this, runWalkToCamp, { startLine: sl });
+    addSceneBackButton(this);
+  }
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
   }
 }

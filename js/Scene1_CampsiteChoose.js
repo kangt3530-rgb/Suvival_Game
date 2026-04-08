@@ -57,6 +57,7 @@ class CampSelectScene extends Phaser.Scene {
     const boot = this.sys.settings.data;
     const startState = boot && typeof boot.startState === 'number' ? boot.startState : 1;
     this.enterState(startState);
+    addSceneBackButton(this);
   }
 
   /** Scene 1 开场三句台词：全屏点击推进；第 2 句时傍晚变暗；第 3 句点完后显示四地块。 */
@@ -149,7 +150,7 @@ class CampSelectScene extends Phaser.Scene {
         color: '#f0e6dc',
       })
       .setOrigin(0.5, 0)
-      .setDepth(center.y + 21);
+      .setDepth(WORLD_UI_LABEL_DEPTH);
     this.pushStage(lbl);
 
     const tb = lbl.getBounds();
@@ -238,7 +239,7 @@ class CampSelectScene extends Phaser.Scene {
     const cam = this.cameras.main;
     this.playerDot = this.add
       .circle(cam.width / 2, cam.height * 0.72, 20, 0xffffff)
-      .setDepth(4800);
+      .setDepth(WORLD_PLAYER_MARKER_DEPTH);
   }
 
   movePlayerThen(x, y, onComplete) {
@@ -395,7 +396,7 @@ class CampSelectScene extends Phaser.Scene {
           color: '#f0e6dc',
         })
         .setOrigin(0.5, 0)
-        .setDepth(center.y + 1);
+        .setDepth(WORLD_UI_LABEL_DEPTH);
       this.pushStage(lbl);
 
       const vx = [co.tl.x, co.tr.x, co.br.x, co.bl.x];
@@ -709,7 +710,7 @@ class CampSelectScene extends Phaser.Scene {
           color: '#f0e6dc',
         })
         .setOrigin(0.5, 0)
-        .setDepth(center.y + 21);
+        .setDepth(WORLD_UI_LABEL_DEPTH);
       this.pushStage(lbl);
 
       const vx = [co.tl.x, co.tr.x, co.br.x, co.bl.x];
@@ -839,7 +840,7 @@ class CampSelectScene extends Phaser.Scene {
           color: '#f0e6dc',
         })
         .setOrigin(0.5, 0)
-        .setDepth(center.y + 21);
+        .setDepth(WORLD_UI_LABEL_DEPTH);
       this.pushStage(lbl);
 
       const vx = [co.tl.x, co.tr.x, co.br.x, co.bl.x];
@@ -972,7 +973,7 @@ class CampSelectScene extends Phaser.Scene {
           wordWrap: { width: 200 },
         })
         .setOrigin(0.5, 0)
-        .setDepth(center.y + 21);
+        .setDepth(WORLD_UI_LABEL_DEPTH);
       this.pushStage(lbl);
 
       const vx = [co.tl.x, co.tr.x, co.br.x, co.bl.x];
@@ -1121,7 +1122,7 @@ class CampSelectScene extends Phaser.Scene {
           wordWrap: { width: 220 },
         })
         .setOrigin(0.5, 0)
-        .setDepth(center.y + 21);
+        .setDepth(WORLD_UI_LABEL_DEPTH);
       this.pushStage(lbl);
 
       const vx = [co.tl.x, co.tr.x, co.br.x, co.bl.x];
@@ -1322,7 +1323,7 @@ class CampSelectScene extends Phaser.Scene {
         color: '#d7ccc8',
       })
       .setOrigin(0.5)
-      .setDepth(ctr.y + 25);
+      .setDepth(WORLD_UI_LABEL_DEPTH);
     this.pushStage(hint);
   }
 
@@ -1386,7 +1387,7 @@ class CampSelectScene extends Phaser.Scene {
     const walkEndY = herbY + 44;
 
     this.ensurePlayerDot();
-    this.playerDot.setDepth(54);
+    this.playerDot.setDepth(WORLD_PLAYER_MARKER_DEPTH);
 
     const herbRoot = this.add.container(herbX, herbY).setDepth(200).setVisible(false);
     const herbGlow = this.add.graphics();
@@ -1511,12 +1512,25 @@ class CampSelectScene extends Phaser.Scene {
       this.time.delayedCall(2200, () => {
         this.cameras.main.fadeOut(500, 0, 0, 0);
         this.time.delayedCall(500, () => {
-          this.scene.start(SCENE_KEYS.FIRE_NPC);
+          transitionSceneNoHistory(this, SCENE_KEYS.FIRE_NPC);
         });
       });
     });
     collectBtn.on('pointerover', () => this.input.setDefaultCursor('pointer'));
     collectBtn.on('pointerout', () => this.input.setDefaultCursor('default'));
+  }
+
+  getResumePayload() {
+    return { startState: this.gameState };
+  }
+
+  /** Back 优先退回营地上一关（state），到 state 1 再退回栈中上一 Phaser 场景 */
+  tryConsumeInternalBack() {
+    if (this.gameState > 1) {
+      this.enterState(this.gameState - 1);
+      return true;
+    }
+    return false;
   }
 }
 // ---------- 兼容：旧 NpcScene 键并入 CampSelectScene 的 state 2（避免两套 NPC 剧本）----------
@@ -1526,6 +1540,7 @@ class NpcScene extends Phaser.Scene {
   }
 
   create() {
+    /** 兼容入口：不重压栈，避免 Back 回到本场景再次跳转 */
     this.scene.start(SCENE_KEYS.CAMP, { startState: 2 });
   }
 }
@@ -1546,7 +1561,8 @@ class FireSpotScene extends Phaser.Scene {
         align: 'center',
         wordWrap: { width: GAME_WIDTH - 40 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(WORLD_UI_LABEL_DEPTH);
 
     // 四个可点击区域：用半透明色块表示（无外部图片）
     const zones = [
@@ -1601,7 +1617,8 @@ class FireSpotScene extends Phaser.Scene {
         align: 'center',
         wordWrap: { width: GAME_WIDTH - 50 },
       })
-      .setOrigin(0.5);
+      .setOrigin(0.5)
+      .setDepth(WORLD_UI_LABEL_DEPTH);
 
     // 是否已通过“开阔平地”进入下一步（避免重复叠加结束文案）
     this.fireSpotResolved = false;
@@ -1610,6 +1627,7 @@ class FireSpotScene extends Phaser.Scene {
     zones.forEach((z) => {
       const rect = this.add.rectangle(z.x + z.w / 2, z.y + z.h / 2, z.w, z.h, z.color, 0.85);
       rect.setStrokeStyle(2, 0xffffff, 0.4);
+      rect.setDepth(200);
       rect.setInteractive({ useHandCursor: true });
       if (z.key !== 'open') wrongRects.push(rect);
 
@@ -1620,7 +1638,8 @@ class FireSpotScene extends Phaser.Scene {
           align: 'center',
           wordWrap: { width: z.w - 8 },
         })
-        .setOrigin(0.5);
+        .setOrigin(0.5)
+        .setDepth(WORLD_UI_LABEL_DEPTH);
 
       rect.on('pointerdown', () => {
         // 已通过开阔平地则不再处理任何点击（含重复点正确区）
@@ -1640,10 +1659,11 @@ class FireSpotScene extends Phaser.Scene {
           wrongRects.forEach((r) => r.disableInteractive());
           this.cameras.main.fadeOut(700, 0, 0, 0);
           this.time.delayedCall(700, () => {
-            this.scene.start(SCENE_KEYS.FIRE_PREP);
+            transitionScene(this, SCENE_KEYS.FIRE_PREP);
           });
         }
       });
     });
+    addSceneBackButton(this);
   }
 }
