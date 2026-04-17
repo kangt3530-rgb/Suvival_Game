@@ -474,6 +474,10 @@ class AR1ArrivedScene extends Phaser.Scene {
 class AR2BackpackScene extends Phaser.Scene {
   constructor() { super({ key: 'AR2BackpackScene' }); }
 
+  preload() {
+    this.load.image('backpack', 'assets/Backpack.png');
+  }
+
   create() {
     this.cameras.main.setBackgroundColor('#2a1f14');
     this.cameras.main.fadeIn(600, 0, 0, 0);
@@ -483,9 +487,10 @@ class AR2BackpackScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2 - 20;
 
-    // 背包色块
-    const bag = this.add.rectangle(cx, cy, 180, 140, 0x5c4033);
-    bag.setStrokeStyle(2, 0x3a2218);
+    // 背包图片
+    const bag = this.add.image(cx, cy, 'backpack');
+    bag.setDisplaySize(GAME_HEIGHT, GAME_HEIGHT);
+    bag.setBlendMode(Phaser.BlendModes.SCREEN);
 
     // 背包内容（初始隐藏）
     const notebook = this.add.rectangle(cx - 34, cy, 80, 60, 0xf5e6d3).setAlpha(0);
@@ -508,7 +513,6 @@ class AR2BackpackScene extends Phaser.Scene {
         duration: 300,
         ease: 'Linear',
         onComplete: () => {
-          bag.setFillStyle(0x8b6914);
           this.tweens.add({
             targets: bag,
             scaleY: 1,
