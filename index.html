@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Survival Lesson · Phaser</title>
+  <link rel="icon" href="data:," />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,16 +19,15 @@
     #game canvas {
       display: block;
       margin: 0 auto;
+      /* 显式 smooth 默认，避免个别 UA 用邻近插值放大 canvas */
+      image-rendering: auto;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
 <div id="game"></div>
-<!-- 仅 4 个主脚本：阶段化 Scene 文件 → MainConfig 统一注册与启动 -->
-<script src="js/Scene0_Background.js"></script>
-<script src="js/Scene1_CampsiteChoose.js"></script>
-<script src="js/Scene2_Firebuilding.js"></script>
-<script src="js/MainConfig.js"></script>
+<!-- Phaser 全局 → src/main.js 注入配置并链式加载 public/js 场景与 MainConfig -->
+<script type="module" src="./src/main.js"></script>
 </body>
 </html>
