@@ -43,7 +43,6 @@ class BG0TitleScene extends Phaser.Scene {
       .setOrigin(0.5)
       .setDepth(5000);
 
-    // 脉冲 tween
     this.tweens.add({
       targets: hint,
       alpha: { from: 0.5, to: 1 },
@@ -53,7 +52,7 @@ class BG0TitleScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    // 点击整个场景 → fadeOut → 进 BG1
+    // 点击 → 淡出进 BG1
     let clicked = false;
     this.input.on('pointerdown', () => {
       if (clicked) return;
@@ -63,6 +62,7 @@ class BG0TitleScene extends Phaser.Scene {
         transitionScene(this, SCENE_KEYS.BG1);
       });
     });
+
     addSceneBackButton(this);
   }
 }

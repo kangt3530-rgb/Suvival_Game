@@ -4,7 +4,6 @@
 export function mixinCampSelectScene3(Proto) {
   Object.assign(Proto.prototype, {
   buildScene3WaterDistance() {
-    const cam = this.cameras.main;
     this.dialogText.setText('…Water would help… But how close is too close?');
 
     const riverCartX = 0;
@@ -27,7 +26,7 @@ export function mixinCampSelectScene3(Proto) {
     gRiver.setDepth(riverDepth);
 
     const continueBtn = this.add
-      .text(cam.width / 2, cam.height - 128, 'Continue', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

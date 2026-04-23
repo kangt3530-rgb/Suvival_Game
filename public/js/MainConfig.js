@@ -8,7 +8,6 @@ import {
   GAME_HEIGHT,
   DEV_START_SCENE,
 } from '../../src/config/GameConfig.js';
-import { getRecommendedGameResolution } from '../../src/utils/imageQuality.js';
 
 /** Phaser 场景 key → 类（由各 Scene 模块挂到 globalThis） */
 var SCENE_KEY_TO_CLASS = {
@@ -95,10 +94,10 @@ function buildSceneListForBoot() {
 }
 
 // ---------- Phaser 根配置 ----------
+// 自适应布局：逻辑画布固定 1280×720，Scale.FIT 等比铺满浏览器并居中（留黑边，不裁剪、不拉伸）。
 var PHASER_GAME_CONFIG = {
   type: Phaser.AUTO,
   backgroundColor: '#1a1008',
-  resolution: getRecommendedGameResolution(),
   render: {
     antialias: true,
     pixelArt: false,
@@ -123,6 +122,7 @@ var game = new Phaser.Game(PHASER_GAME_CONFIG);
   }
 })();
 
+// 窗口尺寸变化时重算 FIT 比例；避免切屏 / 调窗口后画布位置错位。
 window.addEventListener('resize', () => {
   game.scale.refresh();
 });

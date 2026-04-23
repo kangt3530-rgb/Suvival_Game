@@ -4,7 +4,6 @@
 export function mixinCampSelectScene4(Proto) {
   Object.assign(Proto.prototype, {
   buildScene4TerrainTriple() {
-    const cam = this.cameras.main;
     this.dialogText.setText('These all look fine at first… But what happens if the weather changes?');
 
     const size = 56;
@@ -42,7 +41,7 @@ export function mixinCampSelectScene4(Proto) {
     ];
 
     const continueBtn = this.add
-      .text(cam.width / 2, cam.height - 128, 'Continue', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

@@ -2,6 +2,7 @@
 import { FireIso } from "../../utils/FireIso.js";
 import { transitionScene, addSceneBackButton } from "../../utils/SceneNav.js";
 import { FIREBUILDING_HERB_NAME } from "./fireConstants.js";
+import { TEXT_DIALOG_BODY, TEXT_BTN_PRIMARY } from "../../utils/typography.js";
 
 export default class FirebuildingNpcScene extends Phaser.Scene {
   constructor() {
@@ -86,29 +87,22 @@ export default class FirebuildingNpcScene extends Phaser.Scene {
       this.gestureTargets.push(root);
     });
 
+    // boxH=150 flush bottom (center at h-75, bottom at h)
     this.dialogBg = this.add
-      .rectangle(w / 2, h - 70, w - 32, 118, 0x000000, 0.7)
-      .setStrokeStyle(1, 0x5c4033, 0.85)
+      .rectangle(w / 2, h - 75, w - 32, 150, 0x000000, 0.62)
+      .setStrokeStyle(1, 0x5c4033, 0.8)
       .setDepth(5000);
     this.dialogText = this.add
-      .text(w / 2, h - 82, '', {
-        fontFamily: 'Georgia, "Segoe UI", serif',
-        fontSize: '16px',
-        color: '#f5e6d3',
+      .text(w / 2, h - 75, '', {
+        ...TEXT_DIALOG_BODY,
         align: 'center',
         wordWrap: { width: w - 72 },
-        lineSpacing: 4,
       })
       .setOrigin(0.5)
       .setDepth(5001);
 
     this.nextBtn = this.add
-      .text(w / 2, h - 124, 'Next', {
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#5c3d2e',
-        padding: { x: 22, y: 10 },
-      })
+      .text(w / 2, h - 160, 'Next', TEXT_BTN_PRIMARY)
       .setOrigin(0.5)
       .setDepth(5002)
       .setInteractive({ useHandCursor: true });
@@ -203,28 +197,23 @@ export default class FirebuildingNpcScene extends Phaser.Scene {
     const y = this.choiceRowY;
     const cx = GAME_WIDTH / 2;
 
+    const choiceStyle = {
+      fontFamily: 'Segoe UI, Arial, sans-serif',
+      fontSize: '15px',
+      color: '#f0e8d8',
+      backgroundColor: '#4a3a2a',
+      padding: { x: 14, y: 10 },
+      wordWrap: { width: 200 },
+      align: 'center',
+    };
     this.choiceA = this.add
-      .text(cx - 220, y, '“It’s just a fire. How hard can it be?”', {
-        fontSize: '14px',
-        color: '#f0e8d8',
-        backgroundColor: '#4a3a2a',
-        padding: { x: 14, y: 10 },
-        wordWrap: { width: 200 },
-        align: 'center',
-      })
+      .text(cx - 220, y, '“It’s just a fire. How hard can it be?”', choiceStyle)
       .setOrigin(0.5)
       .setDepth(5003)
       .setInteractive({ useHandCursor: true });
 
     this.choiceB = this.add
-      .text(cx + 220, y, '“What should I be careful about?”', {
-        fontSize: '14px',
-        color: '#f0e8d8',
-        backgroundColor: '#4a3a2a',
-        padding: { x: 14, y: 10 },
-        wordWrap: { width: 200 },
-        align: 'center',
-      })
+      .text(cx + 220, y, '“What should I be careful about?”', choiceStyle)
       .setOrigin(0.5)
       .setDepth(5003)
       .setInteractive({ useHandCursor: true });

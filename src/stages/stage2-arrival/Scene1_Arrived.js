@@ -5,6 +5,7 @@ import {
   scaleFullscreenBackgroundImage,
 } from '../../utils/imageQuality.js';
 import { createDialogBox, _runLines, AR1_ARRIVED_DIALOG } from '../../utils/Dialogue.js';
+import { TEXT_HUD } from '../../utils/typography.js';
 import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
 import { addProtagonistIllustration } from '../stage1-background/stage1NotebookShared.js';
@@ -50,6 +51,11 @@ export default class Scene1Arrived extends Phaser.Scene {
     setTextureLinearByKey(this, 'bg_village');
     scaleFullscreenBackgroundImage(bg);
 
+    this.add
+      .rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000)
+      .setAlpha(0.52)
+      .setDepth(1);
+
     /** @type {Phaser.FX.Blur|null} */
     let blurFx = null;
     if (fromTimeTravel && bg.postFX && typeof bg.postFX.addBlur === 'function') {
@@ -75,35 +81,26 @@ export default class Scene1Arrived extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    const sun = this.add.circle(GAME_WIDTH * 0.18, GAME_HEIGHT * 0.2, 42, 0xffe8b8, 0.55).setDepth(120);
-    this.tweens.add({
-      targets: sun,
-      alpha: { from: 0.35, to: 0.75 },
-      scale: { from: 0.92, to: 1.06 },
-      duration: 2800,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
 
     if (fromTimeTravel) {
       this._playTimeTravelEyelidWake(cx, cy, blurFx);
     }
 
     this.add
-      .text(GAME_WIDTH - 20, 20, 'Day 1 / 30', {
-        fontSize: '14px',
-        color: '#3d2817',
-        backgroundColor: '#f5e6d3',
-        padding: { x: 6, y: 6 },
-      })
+      .text(GAME_WIDTH - 20, 20, 'Day 1 / 30', TEXT_HUD)
       .setOrigin(1, 0)
       .setDepth(5000);
 
     const portraitSleep = addProtagonistIllustration(this, 'ar1_sleep', {
       ...AR1_ARRIVED_DIALOG,
-      portraitAdjustY: -14,
+      portraitScreenAnchorXRatio: 0.5,
+      portraitMaxWidthScreenRatio: 0.338 * 1.6 * 0.9,
+      portraitMaxHeightScreenRatio: 0.806 * 1.6 * 0.9,
+      portraitLiftPx: 70,
+      portraitAdjustY: 144,
     });
+    portraitSleep.setAlpha(0);
+    this.tweens.add({ targets: portraitSleep, alpha: 1, duration: 600, ease: 'Sine.easeOut' });
     const portraitAwake = addProtagonistIllustration(this, 'ar1_awake', {
       ...AR1_ARRIVED_DIALOG,
       portraitAdjustY: 0,

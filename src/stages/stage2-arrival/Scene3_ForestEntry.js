@@ -1,5 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../../config/GameConfig.js';
-import { createDialogBox, _runLines } from '../../utils/Dialogue.js';
+import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
 
 /** 走向森林入口 */
@@ -13,13 +13,17 @@ export default class Scene3ForestEntry extends Phaser.Scene {
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a2e1a);
+    this.add
+      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000)
+      .setAlpha(0.52)
+      .setDepth(1);
 
     const forestX = GAME_WIDTH - 160;
     this.add.rectangle(forestX, GAME_HEIGHT / 2, 260, GAME_HEIGHT, 0x0d1f0d, 0.7);
 
     const player = this.add.circle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 20, 0xffffff);
 
-    const dialog = createDialogBox(this);
+    const dialog = createDialogBox(this, GENERIC_DIALOG);
     const lines = [
       "The herbs… they won't be found in the village.",
       "I'll have to search the forest… and beyond.",

@@ -1,6 +1,7 @@
 /** 四个生火位置安全性评估 — FireSpotInspectScene */
 import { FireIso } from "../../utils/FireIso.js";
 import { transitionScene, addSceneBackButton } from "../../utils/SceneNav.js";
+import { TEXT_DIALOG_BODY, TEXT_BTN_PRIMARY, TEXT_HINT } from "../../utils/typography.js";
 
 export default class FireSpotInspectScene extends Phaser.Scene {
   constructor() {
@@ -14,8 +15,8 @@ export default class FireSpotInspectScene extends Phaser.Scene {
 
     const w = GAME_WIDTH;
     const h = GAME_HEIGHT;
-    const cw = this.cameras.main.width;
-    const ch = this.cameras.main.height;
+    const cw = GAME_WIDTH;
+    const ch = GAME_HEIGHT;
     this.add.rectangle(w / 2, h / 2, w, h, 0x0f0e0a, 1).setDepth(-400);
     this.isoC = FireIso.createConfig(w, h);
     FireIso.drawGround(this, this.isoC);
@@ -23,18 +24,16 @@ export default class FireSpotInspectScene extends Phaser.Scene {
     const p0 = FireIso.cartesianToIso(this.isoC, -1.2, 0.6);
     this.playerDot = this.add.circle(p0.x, p0.y, 20, 0xffffff).setDepth(WORLD_PLAYER_MARKER_DEPTH);
 
+    // boxH=150 flush bottom (center at ch-75, bottom at ch)
     this.dialogBg = this.add
-      .rectangle(cw / 2, ch - 65, cw - 28, 130, 0x000000, 0.72)
-      .setStrokeStyle(1, 0x5c4033, 0.88)
+      .rectangle(cw / 2, ch - 75, cw - 28, 150, 0x000000, 0.62)
+      .setStrokeStyle(1, 0x5c4033, 0.8)
       .setDepth(5000);
     this.dialogText = this.add
-      .text(cw / 2, ch - 90, '', {
-        fontFamily: 'Georgia, "Segoe UI", serif',
-        fontSize: '16px',
-        color: '#f5e6d3',
+      .text(cw / 2, ch - 75, '', {
+        ...TEXT_DIALOG_BODY,
         align: 'center',
         wordWrap: { width: cw - 100 },
-        lineSpacing: 5,
       })
       .setOrigin(0.5)
       .setDepth(5001);
@@ -46,12 +45,7 @@ export default class FireSpotInspectScene extends Phaser.Scene {
     const hasInspectResume = typeof boot.introStep === 'number';
 
     this.nextBtn = this.add
-      .text(cw / 2, ch - 35, 'Next', {
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#5c3d2e',
-        padding: { x: 22, y: 10 },
-      })
+      .text(cw / 2, ch - 165, 'Next', TEXT_BTN_PRIMARY)
       .setOrigin(0.5)
       .setDepth(5002)
       .setInteractive({ useHandCursor: true });
@@ -61,8 +55,7 @@ export default class FireSpotInspectScene extends Phaser.Scene {
 
     this.hintText = this.add
       .text(w / 2, 52, '', {
-        fontSize: '13px',
-        color: '#c8c0a8',
+        ...TEXT_HINT,
         align: 'center',
         wordWrap: { width: w - 40 },
       })
@@ -71,9 +64,8 @@ export default class FireSpotInspectScene extends Phaser.Scene {
       .setAlpha(0);
 
     this.continueBtn = this.add
-      .text(cw / 2, ch - 35, 'Continue — prepare the fire site', {
-        fontSize: '17px',
-        color: '#fff8e7',
+      .text(cw / 2, ch - 165, 'Continue — prepare the fire site', {
+        ...TEXT_BTN_PRIMARY,
         backgroundColor: '#4a6b3a',
         padding: { x: 18, y: 10 },
       })
@@ -213,8 +205,6 @@ export default class FireSpotInspectScene extends Phaser.Scene {
   }
 
   applyInspectResumeUi() {
-    const cw = this.cameras.main.width;
-    const ch = this.cameras.main.height;
     if (this.zonesEnabled) {
       this.dialogText.setText('Tap each area to inspect.');
       this.nextBtn.setVisible(false).disableInteractive();

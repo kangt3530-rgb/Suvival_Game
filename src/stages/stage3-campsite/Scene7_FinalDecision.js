@@ -4,7 +4,6 @@
 export function mixinCampSelectScene7(Proto) {
   Object.assign(Proto.prototype, {
   buildScene7CompareCampsites() {
-    const cam = this.cameras.main;
     this.dialogText.setText('…No place is perfect… I need to choose what matters more.');
 
     const size = 68;
@@ -59,7 +58,7 @@ export function mixinCampSelectScene7(Proto) {
     ];
 
     const continueBtn = this.add
-      .text(cam.width / 2, cam.height - 128, 'Continue', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

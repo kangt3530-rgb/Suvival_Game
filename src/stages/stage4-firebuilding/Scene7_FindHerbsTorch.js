@@ -1,5 +1,6 @@
 /** 火把照明寻药 — HerbHuntScene */
 import { goToTitleScene, addSceneBackButton } from "../../utils/SceneNav.js";
+import { TEXT_CARD_TITLE, TEXT_CARD_BODY, TEXT_BTN_PRIMARY, TEXT_SCENE_TITLE, TEXT_HINT } from "../../utils/typography.js";
 
 export default class HerbHuntScene extends Phaser.Scene {
   constructor() {
@@ -21,17 +22,14 @@ export default class HerbHuntScene extends Phaser.Scene {
       .setDepth(2500);
     this.introTitle = this.add
       .text(cx, boxY - 42, 'Find Herbs', {
-        fontSize: '22px',
-        color: '#c8d4c0',
+        ...TEXT_CARD_TITLE,
       })
       .setOrigin(0.5)
       .setDepth(2501);
     this.introText = this.add
       .text(cx, boxY + 4, lines[0], {
-        fontSize: '15px',
-        color: '#f0e8d8',
+        ...TEXT_CARD_BODY,
         align: 'center',
-        lineSpacing: 6,
         wordWrap: { width: GAME_WIDTH - 72 },
       })
       .setOrigin(0.5)
@@ -39,10 +37,7 @@ export default class HerbHuntScene extends Phaser.Scene {
     this.introStep = 0;
     this.introNextBtn = this.add
       .text(cx, boxY + 52, 'Next', {
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#3d4a32',
-        padding: { x: 22, y: 10 },
+        ...TEXT_BTN_PRIMARY,
       })
       .setOrigin(0.5)
       .setDepth(2502)
@@ -237,7 +232,7 @@ export default class HerbHuntScene extends Phaser.Scene {
 
     this.add
       .text(GAME_WIDTH / 2, 22, 'Find Herbs', {
-        fontSize: '20px',
+        ...TEXT_SCENE_TITLE,
         color: '#c8d4c0',
       })
       .setOrigin(0.5)
@@ -249,10 +244,8 @@ export default class HerbHuntScene extends Phaser.Scene {
       : 'Light your stick from the coals below.';
     this.herbDialog = this.add
       .text(GAME_WIDTH / 2, this.herbDialogBottomY, dialogStart, {
-        fontSize: '14px',
-        color: '#e8e0d4',
+        ...TEXT_CARD_BODY,
         align: 'center',
-        lineSpacing: 5,
         wordWrap: { width: GAME_WIDTH - 44 },
       })
       .setOrigin(0.5, 1)

@@ -4,7 +4,6 @@
 export function mixinCampSelectScene2(Proto) {
   Object.assign(Proto.prototype, {
   buildScene2NPCEncounter() {
-    const cam = this.cameras.main;
     const travelerPos = this.cartesianToIso(140, 60);
     const firePos = this.cartesianToIso(220, 100);
 
@@ -39,7 +38,7 @@ export function mixinCampSelectScene2(Proto) {
     this.dialogText.setText(lines[0].t);
 
     const nextBtn = this.add
-      .text(cam.width / 2, cam.height - 128, 'Next', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Next', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

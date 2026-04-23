@@ -7,6 +7,7 @@ import {
   COLLECT_DRAG_DEPTH,
   COLLECT_TOP_SCREEN_MIN_Y,
 } from "./fireConstants.js";
+import { TEXT_CARD_TITLE, TEXT_CARD_BODY, TEXT_BTN_PRIMARY, TEXT_SCENE_TITLE, TEXT_HINT } from "../../utils/typography.js";
 
 export default class CollectMaterialsScene extends Phaser.Scene {
   constructor() {
@@ -339,14 +340,13 @@ export default class CollectMaterialsScene extends Phaser.Scene {
       .setDepth(2500);
     this.introTitle = this.add
       .text(cx, boxY - 46, 'Collecting Materials', {
-        fontSize: '22px',
-        color: '#e8dcc8',
+        ...TEXT_CARD_TITLE,
       })
       .setOrigin(0.5)
       .setDepth(2501);
     this.introText = this.add
       .text(cx, boxY + 6, lines[0], {
-        fontSize: '15px',
+        ...TEXT_CARD_BODY,
         color: '#f5e6d3',
         align: 'center',
         lineSpacing: 6,
@@ -357,10 +357,7 @@ export default class CollectMaterialsScene extends Phaser.Scene {
     this.introStep = 0;
     this.introNextBtn = this.add
       .text(cx, boxY + 58, 'Next', {
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#5c3d2e',
-        padding: { x: 22, y: 10 },
+        ...TEXT_BTN_PRIMARY,
       })
       .setOrigin(0.5)
       .setDepth(2502)
@@ -428,7 +425,7 @@ export default class CollectMaterialsScene extends Phaser.Scene {
 
     this.collectTitle = this.add
       .text(GAME_WIDTH / 2, 18, 'Collecting Materials', {
-        fontSize: '18px',
+        ...TEXT_SCENE_TITLE,
         color: '#e8f0e0',
       })
       .setOrigin(0.5, 0)
@@ -440,7 +437,7 @@ export default class CollectMaterialsScene extends Phaser.Scene {
         44,
         'Walk: tap an item. Or drag it to the backpack. Need 8 valid pieces (tinder · kindling · fuel).',
         {
-          fontSize: '12px',
+          ...TEXT_HINT,
           color: '#c5d4ba',
           align: 'center',
           lineSpacing: 4,
@@ -453,7 +450,7 @@ export default class CollectMaterialsScene extends Phaser.Scene {
 
     this.collectDialog = this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT - 58, 'Temporary stash: 0 / 8 valid pieces.', {
-        fontSize: '15px',
+        ...TEXT_CARD_BODY,
         color: '#f5e6d3',
         align: 'center',
         lineSpacing: 4,

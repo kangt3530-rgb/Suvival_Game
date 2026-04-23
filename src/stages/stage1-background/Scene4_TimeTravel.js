@@ -1,10 +1,13 @@
 import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../../config/GameConfig.js';
 import { createDialogBox, _runLines, STAGE1_DIARY_DIALOG } from '../../utils/Dialogue.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
-import { gameAssetUrl } from '../../utils/assets.js';
+import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
 import {
-  ensureNotebookIntroLoaded,
-  addNotebookBackground,
+  configureMainCameraSmoothPixels,
+  setTextureLinearByKey,
+  scaleFullscreenBackgroundImage,
+} from '../../utils/imageQuality.js';
+import {
   addProtagonistIllustration,
 } from './stage1NotebookShared.js';
 
@@ -34,7 +37,8 @@ export default class Scene4TimeTravel extends Phaser.Scene {
   }
 
   preload() {
-    ensureNotebookIntroLoaded(this);
+    applyAssetPathPrefix(this);
+    this.load.image('bg_tt_notebook', gameAssetUrl('notebook intro.png'));
     this.load.image(PORTRAIT_KEY, gameAssetUrl('main-character-sleeping.png'));
   }
 
@@ -42,22 +46,66 @@ export default class Scene4TimeTravel extends Phaser.Scene {
     this.cameras.main.setBackgroundColor('#1a1510');
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
-    this._notebookBg = addNotebookBackground(this, 0);
-    this._dialog = createDialogBox(this, STAGE1_DIARY_DIALOG);
-    this._pageIllust = addProtagonistIllustration(this, PORTRAIT_KEY);
+    // ── 背景层（始终可见）
+    configureMainCameraSmoothPixels(this);
+    this._notebookBg = this.add
+      .image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'bg_tt_notebook')
+      .setOrigin(0.5, 0.5)
+      .setDepth(0);
+    setTextureLinearByKey(this, 'bg_tt_notebook');
+    scaleFullscreenBackgroundImage(this._notebookBg);
+
+    this._focusOverlay = this.add
+      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000)
+      .setAlpha(0.28)
+      .setDepth(1);
+    if (this._notebookBg.postFX) {
+      this._notebookBg.postFX.addBlur(1, 0.5, 0.15, 4);
+    }
+
     this._backBtn = addSceneBackButton(this);
 
-    const lines = ['If only I had known this earlier…'];
-
     const boot = this.sys.settings.data || {};
+    const startLine = typeof boot.startLine === 'number' ? boot.startLine : 0;
+
+    // resume 时直接跳过等待，立即展开内容
+    if (startLine > 0) {
+      this._showNotebookAndDialog(startLine);
+      return;
+    }
+
+    // 首次进入：等待第一次点击再展开 notebook1 + 对话框
+    this.input.once('pointerdown', () => {
+      this._showNotebookAndDialog(0);
+    });
+  }
+
+  _showNotebookAndDialog(startLine) {
+    // 对话框 + 立绘同时出现
+    this._dialog = createDialogBox(this, STAGE1_DIARY_DIALOG);
+    this._pageIllust = addProtagonistIllustration(this, PORTRAIT_KEY, {
+      portraitScreenAnchorXRatio: 0.5,
+      portraitMaxWidthScreenRatio: 0.338 * 1.6 * 0.9,
+      portraitMaxHeightScreenRatio: 0.806 * 1.6 * 0.9,
+      portraitLiftPx: 70,
+      portraitBottomBleed: 0,
+    });
+    if (this._pageIllust) {
+      this._pageIllust.setAlpha(0);
+      this.tweens.add({
+        targets: this._pageIllust,
+        alpha: 1,
+        duration: 600,
+        ease: 'Sine.easeOut',
+      });
+    }
+
     _runLines(
-      lines,
+      ['If only I had known this earlier…'],
       this._dialog,
       this,
-      () => {
-        this._beginTimeTravelSequence();
-      },
-      { startLine: typeof boot.startLine === 'number' ? boot.startLine : 0 }
+      () => { this._beginTimeTravelSequence(); },
+      { startLine }
     );
   }
 
@@ -76,6 +124,7 @@ export default class Scene4TimeTravel extends Phaser.Scene {
 
     const fadeTargets = [
       this._notebookBg,
+      this._focusOverlay,
       this._pageIllust,
       d.bg,
       d.text,
@@ -100,6 +149,7 @@ export default class Scene4TimeTravel extends Phaser.Scene {
           if (go && go.destroy) go.destroy();
         });
         this._notebookBg = null;
+        this._focusOverlay = null;
         this._pageIllust = null;
         this._dialog = null;
 
@@ -118,11 +168,11 @@ export default class Scene4TimeTravel extends Phaser.Scene {
     const startY = -56;
     const tear = this.add.container(cx, startY).setDepth(15000).setAlpha(0.88);
 
-    const rim = this.add.ellipse(0, 1.2, 10, 15, 0x6a9ec4, 0.35);
+    const rim = this.add.ellipse(0, 2.4, 20, 30, 0x6a9ec4, 0.35);
     const body = this.add
-      .ellipse(0, 0, 12, 18, 0xb8e0ff, 0.52)
-      .setStrokeStyle(1, 0xe8fbff, 0.38);
-    const spec = this.add.ellipse(-3, -5, 3.2, 2.6, 0xffffff, 0.55);
+      .ellipse(0, 0, 24, 36, 0xb8e0ff, 0.52)
+      .setStrokeStyle(1.5, 0xe8fbff, 0.38);
+    const spec = this.add.ellipse(-6, -10, 6.4, 5.2, 0xffffff, 0.55);
     tear.add([rim, body, spec]);
 
     this.tweens.add({

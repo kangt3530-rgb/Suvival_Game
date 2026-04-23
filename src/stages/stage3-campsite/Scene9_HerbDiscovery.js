@@ -7,9 +7,8 @@ import { transitionSceneNoHistory } from '../../utils/SceneNav.js';
 export function mixinCampSelectScene9(Proto) {
   Object.assign(Proto.prototype, {
   buildScene9HerbsDiscovery() {
-    const cam = this.cameras.main;
-    const w = cam.width;
-    const h = cam.height;
+    const w = GAME_WIDTH;
+    const h = GAME_HEIGHT;
     this.dialogText.setText('…That should hold for the night.');
 
     const sky = this.add

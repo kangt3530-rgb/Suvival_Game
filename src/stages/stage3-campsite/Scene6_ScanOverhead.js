@@ -4,7 +4,6 @@
 export function mixinCampSelectScene6(Proto) {
   Object.assign(Proto.prototype, {
   buildScene6OverheadScan() {
-    const cam = this.cameras.main;
     this.dialogText.setText('I have to check not just the ground… but also look up… and around…');
 
     const size = 58;
@@ -49,7 +48,7 @@ export function mixinCampSelectScene6(Proto) {
     ];
 
     const continueBtn = this.add
-      .text(cam.width / 2, cam.height - 128, 'Continue', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

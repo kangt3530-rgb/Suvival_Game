@@ -185,9 +185,8 @@ export function mixinCampSelectScene1(Proto) {
       zone.on('pointerout', () => this.input.setDefaultCursor('default'));
     });
 
-    const cam = this.cameras.main;
     const continueScene1 = this.add
-      .text(cam.width / 2, cam.height - 128, 'Continue', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

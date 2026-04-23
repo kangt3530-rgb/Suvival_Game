@@ -12,6 +12,8 @@
       background: #1a1008;
       overflow: hidden;
     }
+    /* Scale.FIT 会算出一个内嵌 1280×720 比例的 canvas，并由 autoCenter 居中；
+       #game 只提供满屏挂载点，余下空白由底色填补（letterbox / pillarbox）。 */
     #game {
       width: 100vw; height: 100vh;
       display: block;
@@ -19,7 +21,7 @@
     #game canvas {
       display: block;
       margin: 0 auto;
-      /* 显式 smooth 默认，避免个别 UA 用邻近插值放大 canvas */
+      /* 显式 smooth，避免个别 UA 对缩放后的 canvas 用邻近插值，产生锯齿。 */
       image-rendering: auto;
     }
   </style>

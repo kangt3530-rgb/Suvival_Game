@@ -1,6 +1,7 @@
 /** 点火、吹气、添柴 — MaintainFireScene */
 import { FireIso } from "../../utils/FireIso.js";
 import { transitionScene, addSceneBackButton } from "../../utils/SceneNav.js";
+import { TEXT_CARD_TITLE, TEXT_CARD_BODY, TEXT_BTN_PRIMARY, TEXT_SCENE_TITLE, TEXT_HINT } from "../../utils/typography.js";
 
 export default class MaintainFireScene extends Phaser.Scene {
   constructor() {
@@ -141,8 +142,7 @@ export default class MaintainFireScene extends Phaser.Scene {
 
     this.add
       .text(cx, 22, 'Start and Maintain the Fire', {
-        fontSize: '20px',
-        color: '#c8c0a8',
+        ...TEXT_SCENE_TITLE,
       })
       .setOrigin(0.5)
       .setDepth(50);
@@ -165,10 +165,9 @@ export default class MaintainFireScene extends Phaser.Scene {
 
     this.mainDialog = this.add
       .text(cx, this.maintainDialogBottomY, maintainIntro, {
-        fontSize: '14px',
+        ...TEXT_CARD_BODY,
         color: '#e8dcc8',
         align: 'center',
-        lineSpacing: 5,
         wordWrap: { width: GAME_WIDTH - 40 },
       })
       .setOrigin(0.5, 1)
@@ -176,8 +175,7 @@ export default class MaintainFireScene extends Phaser.Scene {
 
     this.backpackHint = this.add
       .text(cx, GAME_HEIGHT - 50, 'Open the backpack in the corner — choose flint & steel.', {
-        fontSize: '12px',
-        color: '#9a8a78',
+        ...TEXT_HINT,
         align: 'center',
         wordWrap: { width: GAME_WIDTH - 36 },
       })

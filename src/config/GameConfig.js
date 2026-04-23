@@ -1,6 +1,6 @@
 /**
  * 全局布局与场景键 — 原 MainConfig.js 顶部常量
- * 逻辑分辨率（经 Scale.FIT 铺满浏览器）
+ * 逻辑分辨率（经 Scale.FIT 等比铺满浏览器，保持 16:9 画面构图，空白处由浏览器底色填补）
  */
 export const GAME_WIDTH = 1280;
 export const GAME_HEIGHT = 720;

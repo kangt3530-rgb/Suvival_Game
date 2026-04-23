@@ -4,7 +4,8 @@ import {
   setTextureLinearByKey,
   scaleImageToSquareSide,
 } from '../../utils/imageQuality.js';
-import { createDialogBox, _runLines } from '../../utils/Dialogue.js';
+import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
+import { TEXT_HINT } from '../../utils/typography.js';
 import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
 
@@ -25,6 +26,10 @@ export default class Scene2Backpack extends Phaser.Scene {
     this.cameras.main.fadeIn(600, 0, 0, 0);
 
     this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x2a1f14);
+    this.add
+      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000)
+      .setAlpha(0.52)
+      .setDepth(1);
 
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2 - 20;
@@ -41,16 +46,14 @@ export default class Scene2Backpack extends Phaser.Scene {
 
     this.add
       .text(cx, 48, 'Press B to open your pack and inspect gear.', {
-        fontFamily: 'Georgia, serif',
-        fontSize: '15px',
-        color: '#d8c8b0',
+        ...TEXT_HINT,
         align: 'center',
         wordWrap: { width: GAME_WIDTH - 80 },
       })
       .setOrigin(0.5)
       .setDepth(4800);
 
-    const dialog = createDialogBox(this);
+    const dialog = createDialogBox(this, GENERIC_DIALOG);
     const lines = [
       'My bag… it came with me.',
       "I'm glad I wrote everything down.",

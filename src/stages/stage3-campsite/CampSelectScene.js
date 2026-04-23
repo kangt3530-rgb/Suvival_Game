@@ -2,6 +2,7 @@
  * 营地选址主场景 — 状态 1–9 由 ./Scene*_*.js 的 mixin 注入 build 方法。
  */
 import { addSceneBackButton } from '../../utils/SceneNav.js';
+import { TEXT_DIALOG_BODY } from '../../utils/typography.js';
 import { mixinCampSelectScene1 } from './Scene1_EnterForest.js';
 import { mixinCampSelectScene2 } from './Scene2_NpcEncounter.js';
 import { mixinCampSelectScene3 } from './Scene3_WaterDistance.js';
@@ -18,44 +19,42 @@ export default class CampSelectScene extends Phaser.Scene {
   }
 
   create() {
-    const cam = this.cameras.main;
-    cam.setBackgroundColor('#2a1f14');
+    this.cameras.main.setBackgroundColor('#2a1f14');
 
-    this.isoAnchorX = cam.width / 2;
-    this.isoAnchorY = cam.height * 0.35;
+    this.isoAnchorX = GAME_WIDTH / 2;
+    this.isoAnchorY = GAME_HEIGHT * 0.35;
     this.gameState = 1;
     this.stageObjects = [];
     this.campsiteChoice = null;
 
     this.add
-      .rectangle(0, 0, cam.width, cam.height, 0x111133, 0.35)
+      .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x111133, 0.35)
       .setOrigin(0, 0)
       .setDepth(-1);
 
     this.eveningDimOverlay = this.add
-      .rectangle(0, 0, cam.width, cam.height, 0x0a0612, 0)
+      .rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT, 0x0a0612, 0)
       .setOrigin(0, 0)
       .setDepth(50)
       .setScrollFactor(0);
 
+    // boxH=130 → flush bottom (center at GAME_HEIGHT-65, bottom at GAME_HEIGHT)
     this.dialogBg = this.add.rectangle(
-      cam.width / 2,
-      cam.height - 60,
-      cam.width - 40,
-      96,
+      GAME_WIDTH / 2,
+      GAME_HEIGHT - 65,
+      GAME_WIDTH - 40,
+      130,
       0x000000,
-      0.6
+      0.62
     );
-    this.dialogBg.setStrokeStyle(1, 0x5c4033, 0.85);
+    this.dialogBg.setStrokeStyle(1, 0x5c4033, 0.8);
     this.dialogBg.setDepth(5000);
 
     this.dialogText = this.add
-      .text(cam.width / 2, cam.height - 60, '', {
-        fontFamily: 'Segoe UI, Arial, sans-serif',
-        fontSize: '16px',
-        color: '#f5e6d3',
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 65, '', {
+        ...TEXT_DIALOG_BODY,
         align: 'center',
-        wordWrap: { width: cam.width - 80 },
+        wordWrap: { width: GAME_WIDTH - 80 },
       })
       .setOrigin(0.5)
       .setDepth(5001);
@@ -208,9 +207,8 @@ export default class CampSelectScene extends Phaser.Scene {
   /** 与 Scene0 AR3ForestScene 一致：白色圆占位玩家（不放入 stageObjects，避免 clearStageLayer 销毁）。 */
   ensurePlayerDot() {
     if (this.playerDot && this.playerDot.active) return;
-    const cam = this.cameras.main;
     this.playerDot = this.add
-      .circle(cam.width / 2, cam.height * 0.72, 20, 0xffffff)
+      .circle(GAME_WIDTH / 2, GAME_HEIGHT * 0.72, 20, 0xffffff)
       .setDepth(WORLD_PLAYER_MARKER_DEPTH);
   }
 
@@ -238,9 +236,8 @@ export default class CampSelectScene extends Phaser.Scene {
   /** 进入各关时重置玩家站位（Scene 1 四地块阶段在 buildScene1FourTerrains 末尾再调一次）。 */
   placePlayerForState(state) {
     this.ensurePlayerDot();
-    const cam = this.cameras.main;
-    const w = cam.width;
-    const h = cam.height;
+    const w = GAME_WIDTH;
+    const h = GAME_HEIGHT;
     let px = w * 0.35;
     let py = h * 0.68;
     if (state === 1) {

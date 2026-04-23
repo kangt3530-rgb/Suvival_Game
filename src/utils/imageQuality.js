@@ -1,17 +1,6 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config/GameConfig.js';
 
 /**
- * Phaser 游戏 `config.resolution`：在高 DPI 屏上用更高内部渲染倍率，
- * 避免 1280×720 位图被浏览器硬拉到全屏时「像丢像素 / 严重锯齿」。
- * 上限避免超大画布占满显存（尤其 mobile）。
- */
-export function getRecommendedGameResolution() {
-  if (typeof window === 'undefined' || !window.devicePixelRatio) return 1;
-  const dpr = window.devicePixelRatio;
-  return Math.min(2.25, Math.max(1, dpr));
-}
-
-/**
  * 主相机不将坐标取整到整数像素，避免缩放时出现额外锯齿。
  * （全局 `render.roundPixels` 应在 MainConfig 中一并关闭。）
  * @param {Phaser.Scene} scene

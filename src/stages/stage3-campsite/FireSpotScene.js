@@ -5,6 +5,7 @@ import {
   WORLD_UI_LABEL_DEPTH,
 } from '../../config/GameConfig.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
+import { TEXT_SCENE_TITLE, TEXT_HINT } from '../../utils/typography.js';
 
 /** 营地线：选择开阔平地作为生火点 */
 export default class FireSpotScene extends Phaser.Scene {
@@ -18,8 +19,7 @@ export default class FireSpotScene extends Phaser.Scene {
 
     this.add
       .text(GAME_WIDTH / 2, 36, 'A flat area... Where should you build the fire?', {
-        fontSize: '19px',
-        color: '#e8f0e8',
+        ...TEXT_SCENE_TITLE,
         align: 'center',
         wordWrap: { width: GAME_WIDTH - 40 },
       })
@@ -73,8 +73,7 @@ export default class FireSpotScene extends Phaser.Scene {
 
     this.spotDialog = this.add
       .text(GAME_WIDTH / 2, GAME_HEIGHT - 70, 'Tap an area to choose.', {
-        fontSize: '16px',
-        color: '#f0f5f0',
+        ...TEXT_HINT,
         align: 'center',
         wordWrap: { width: GAME_WIDTH - 50 },
       })

@@ -1,6 +1,7 @@
 /** 按序搭建火堆 — ConstructFireScene */
 import { FireIso } from "../../utils/FireIso.js";
 import { transitionScene, addSceneBackButton } from "../../utils/SceneNav.js";
+import { TEXT_CARD_TITLE, TEXT_CARD_BODY, TEXT_BTN_PRIMARY, TEXT_SCENE_TITLE, TEXT_HINT } from "../../utils/typography.js";
 
 export default class ConstructFireScene extends Phaser.Scene {
   constructor() {
@@ -195,17 +196,14 @@ export default class ConstructFireScene extends Phaser.Scene {
       .setDepth(2500);
     this.introTitle = this.add
       .text(cx, boxY - 42, 'Constructing the Fire', {
-        fontSize: '22px',
-        color: '#e8dcc8',
+        ...TEXT_CARD_TITLE,
       })
       .setOrigin(0.5)
       .setDepth(2501);
     this.introText = this.add
       .text(cx, boxY + 4, lines[0], {
-        fontSize: '15px',
-        color: '#f5e6d3',
+        ...TEXT_CARD_BODY,
         align: 'center',
-        lineSpacing: 6,
         wordWrap: { width: GAME_WIDTH - 72 },
       })
       .setOrigin(0.5)
@@ -213,10 +211,7 @@ export default class ConstructFireScene extends Phaser.Scene {
     this.introStep = 0;
     this.introNextBtn = this.add
       .text(cx, boxY + 52, 'Next', {
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#5c3d2e',
-        padding: { x: 22, y: 10 },
+        ...TEXT_BTN_PRIMARY,
       })
       .setOrigin(0.5)
       .setDepth(2502)
@@ -328,7 +323,7 @@ export default class ConstructFireScene extends Phaser.Scene {
       .setAlpha(0);
     this.constructTitle = this.add
       .text(GAME_WIDTH / 2, 12, 'Constructing the Fire', {
-        fontSize: '18px',
+        ...TEXT_SCENE_TITLE,
         color: '#e8f0e0',
       })
       .setOrigin(0.5, 0)

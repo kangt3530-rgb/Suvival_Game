@@ -4,7 +4,6 @@
 export function mixinCampSelectScene5(Proto) {
   Object.assign(Proto.prototype, {
   buildScene5WindExposure() {
-    const cam = this.cameras.main;
     this.dialogText.setText("…Wind's picking up… That will change things.");
 
     const size = 58;
@@ -44,7 +43,7 @@ export function mixinCampSelectScene5(Proto) {
     ];
 
     const continueBtn = this.add
-      .text(cam.width / 2, cam.height - 128, 'Continue', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

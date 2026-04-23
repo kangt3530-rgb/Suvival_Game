@@ -7,6 +7,7 @@ import {
   scaleFullscreenBackgroundImage,
 } from '../../utils/imageQuality.js';
 import { DIALOG_DEPTH_PORTRAIT_UNDER_DIALOG, STAGE1_DIARY_DIALOG } from '../../utils/Dialogue.js';
+import { TEXT_DATE_PILL } from '../../utils/typography.js';
 
 export const NOTEBOOK_INTRO_FILE = 'notebook intro.png';
 export const NOTEBOOK_TEX_KEY = 'st1_notebook_bg';
@@ -76,13 +77,7 @@ export function addNotebookBackground(scene, depth = 0) {
 /** 顶部日期条（与对白深度协调） */
 export function addDiaryDateLine(scene, text, depth = 6000) {
   return scene.add
-    .text(GAME_WIDTH / 2, 28, text, {
-      fontFamily: 'Georgia, serif',
-      fontSize: '16px',
-      color: '#2a2218',
-      backgroundColor: 'rgba(245, 236, 220, 0.55)',
-      padding: { x: 10, y: 4 },
-    })
+    .text(GAME_WIDTH / 2, 28, text, TEXT_DATE_PILL)
     .setOrigin(0.5)
     .setDepth(depth);
 }

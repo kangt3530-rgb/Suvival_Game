@@ -4,7 +4,6 @@
 export function mixinCampSelectScene8(Proto) {
   Object.assign(Proto.prototype, {
   buildScene8FinalSafetyCheck() {
-    const cam = this.cameras.main;
     const choice = this.campsiteChoice === 'A' ? 'A' : 'B';
     this.scene8Hits = { water: false, ground: false, tree: false };
 
@@ -85,7 +84,7 @@ export function mixinCampSelectScene8(Proto) {
     this.scene8Phase = 'inspect';
 
     const midBtn = this.add
-      .text(cam.width / 2, cam.height - 128, 'Continue', {
+      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
         fontFamily: 'Segoe UI, Arial, sans-serif',
         fontSize: '17px',
         color: '#fff8e7',

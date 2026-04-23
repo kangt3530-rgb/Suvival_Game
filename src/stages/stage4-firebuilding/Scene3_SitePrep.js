@@ -2,6 +2,7 @@
 import { FireIso } from "../../utils/FireIso.js";
 import { transitionScene, addSceneBackButton } from "../../utils/SceneNav.js";
 import { FIRE_PREP_LAYER_OFFSET, FIRE_PREP_PLAYER_DEPTH } from "./fireConstants.js";
+import { TEXT_CARD_TITLE, TEXT_CARD_BODY, TEXT_BTN_PRIMARY, TEXT_SCENE_TITLE, TEXT_HINT } from "../../utils/typography.js";
 
 export default class FireSitePrepScene extends Phaser.Scene {
   constructor() {
@@ -348,17 +349,13 @@ export default class FireSitePrepScene extends Phaser.Scene {
       .setStrokeStyle(0)
       .setAlpha(0);
     this.prepTitle = this.add
-      .text(cx, 14, 'Preparing the Fire Site', {
-        fontSize: '18px',
-        color: '#e8f0e0',
-      })
+      .text(cx, 14, 'Preparing the Fire Site', TEXT_SCENE_TITLE)
       .setOrigin(0.5, 0)
       .setDepth(1000)
       .setAlpha(0);
     this.prepSiteLine = this.add
       .text(cx, 36, `Chosen location: ${this.siteTitle}`, {
-        fontSize: '11px',
-        color: '#a8b898',
+        ...TEXT_HINT,
         align: 'center',
         wordWrap: { width: gw - 36 },
       })
@@ -371,8 +368,7 @@ export default class FireSitePrepScene extends Phaser.Scene {
         52,
         'Tap debris to walk over and kick it aside. Then drag rocks onto the ring.',
         {
-          fontSize: '12px',
-          color: '#c5d4ba',
+          ...TEXT_HINT,
           align: 'center',
           lineSpacing: 4,
           wordWrap: { width: gw - 36 },
@@ -384,7 +380,7 @@ export default class FireSitePrepScene extends Phaser.Scene {
 
     this.prepDialog = this.add
       .text(cx, gh - 62, '', {
-        fontSize: '15px',
+        ...TEXT_CARD_BODY,
         color: '#f5e6d3',
         align: 'center',
         lineSpacing: 6,
@@ -697,17 +693,14 @@ export default class FireSitePrepScene extends Phaser.Scene {
       .setDepth(2500);
     this.introTitle = this.add
       .text(cx, boxY - 42, 'Preparing the Fire Site', {
-        fontSize: '22px',
-        color: '#e8dcc8',
+        ...TEXT_CARD_TITLE,
       })
       .setOrigin(0.5)
       .setDepth(2501);
     this.introText = this.add
       .text(cx, boxY + 4, lines[0], {
-        fontSize: '15px',
-        color: '#f5e6d3',
+        ...TEXT_CARD_BODY,
         align: 'center',
-        lineSpacing: 6,
         wordWrap: { width: this.sys.game.config.width - 72 },
       })
       .setOrigin(0.5)
@@ -715,10 +708,7 @@ export default class FireSitePrepScene extends Phaser.Scene {
     this.introStep = 0;
     this.introNextBtn = this.add
       .text(cx, boxY + 52, 'Next', {
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#5c3d2e',
-        padding: { x: 22, y: 10 },
+        ...TEXT_BTN_PRIMARY,
       })
       .setOrigin(0.5)
       .setDepth(2502)
