@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT } from '../../config/GameConfig.js';
+import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../../config/GameConfig.js';
 import {
   STAGE3_SCENE_KEYS,
   STAGE3_ASSETS,
@@ -28,8 +28,12 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
 
   preload() {
     applyAssetPathPrefix(this);
-    this.load.image(STAGE3_ASSETS.BG_SCOUTING_MAIN.key, gameAssetUrl(STAGE3_ASSETS.BG_SCOUTING_MAIN.file));
-    this.load.image(STAGE3_ASSETS.PORTRAIT_THINKING.key, gameAssetUrl(STAGE3_ASSETS.PORTRAIT_THINKING.file));
+    this.load.image(STAGE3_ASSETS.BG_SCOUTING_MAIN.key,     gameAssetUrl(STAGE3_ASSETS.BG_SCOUTING_MAIN.file));
+    this.load.image(STAGE3_ASSETS.BG_SCOUTING_OVERHEAD.key, gameAssetUrl(STAGE3_ASSETS.BG_SCOUTING_OVERHEAD.file));
+    this.load.image(STAGE3_ASSETS.BG_SCOUTING_GROUND.key,   gameAssetUrl(STAGE3_ASSETS.BG_SCOUTING_GROUND.file));
+    this.load.image(STAGE3_ASSETS.BG_SCOUTING_WIND.key,     gameAssetUrl(STAGE3_ASSETS.BG_SCOUTING_WIND.file));
+    this.load.image(STAGE3_ASSETS.BG_SCOUTING_WATER.key,    gameAssetUrl(STAGE3_ASSETS.BG_SCOUTING_WATER.file));
+    this.load.image(STAGE3_ASSETS.PORTRAIT_THINKING.key,    gameAssetUrl(STAGE3_ASSETS.PORTRAIT_THINKING.file));
   }
 
   create() {
@@ -39,6 +43,7 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
 
+    // ── 主场景层 ──────────────────────────────────────────
     const bg = this.add.image(cx, cy, STAGE3_ASSETS.BG_SCOUTING_MAIN.key).setOrigin(0.5, 0.5);
     setTextureLinearByKey(this, STAGE3_ASSETS.BG_SCOUTING_MAIN.key);
     scaleFullscreenBackgroundImage(bg);
@@ -54,10 +59,64 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
 
     const dialog = createDialogBox(this, GENERIC_DIALOG);
 
-    const introLines = [
-      "Alright… ground, water, wind, and what's above me. Let's take a proper look.",
-    ];
+    // ── 分支覆盖层（depth 3000，低于 hotspot 4000 / 对话框 4998）────
+    const BRANCH_DEPTH = 3000;
+    const branchImg = this.add
+      .image(cx, cy, STAGE3_ASSETS.BG_SCOUTING_MAIN.key)
+      .setOrigin(0.5, 0.5)
+      .setDepth(BRANCH_DEPTH)
+      .setVisible(false);
+    scaleFullscreenBackgroundImage(branchImg);
 
+    const backBtn = this.add
+      .text(28, 28, '← Back', {
+        fontFamily: 'Georgia, serif',
+        fontSize: '18px',
+        color: '#f5e6d3',
+        backgroundColor: 'rgba(0,0,0,0.55)',
+        padding: { x: 12, y: 6 },
+      })
+      .setOrigin(0, 0)
+      .setDepth(BRANCH_DEPTH + 1)
+      .setVisible(false)
+      .setInteractive({ useHandCursor: true });
+
+    const BRANCH_KEY_MAP = {
+      overhead: STAGE3_ASSETS.BG_SCOUTING_OVERHEAD.key,
+      ground:   STAGE3_ASSETS.BG_SCOUTING_GROUND.key,
+      wind:     STAGE3_ASSETS.BG_SCOUTING_WIND.key,
+      water:    STAGE3_ASSETS.BG_SCOUTING_WATER.key,
+    };
+
+    let branchOpen = false;
+    let allHotspotsComplete = false;
+    let sceneBackBtnRef = null; // addSceneBackButton 创建后赋值
+
+    const openBranch = (id) => {
+      const key = BRANCH_KEY_MAP[id];
+      if (!key) return;
+      branchOpen = true;
+      branchImg.setTexture(key).setVisible(true);
+      setTextureLinearByKey(this, key);
+      scaleFullscreenBackgroundImage(branchImg);
+      backBtn.setVisible(true);
+      if (sceneBackBtnRef) sceneBackBtnRef.setVisible(false);
+    };
+
+    const closeBranch = () => {
+      branchOpen = false;
+      branchImg.setVisible(false);
+      backBtn.setVisible(false);
+      if (sceneBackBtnRef) sceneBackBtnRef.setVisible(true);
+      if (allHotspotsComplete) {
+        allHotspotsComplete = false;
+        this._onAllHotspotsChecked(dialog, portrait);
+      }
+    };
+
+    backBtn.on('pointerdown', () => closeBranch());
+
+    // ── Hotspot 配置 ──────────────────────────────────────
     const rawChecked = this.registry.get(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
     const checkedIds = Array.isArray(rawChecked) ? rawChecked.slice() : [];
 
@@ -65,13 +124,13 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
     const sy = GAME_HEIGHT / SCENE3_DESIGN_HEIGHT;
 
     const onHotspotClick = (id) => {
-      console.log('[Scene3] Hotspot clicked:', id);
       hotspotGroup.markChecked(id);
       const current = this.registry.get(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
       const list = Array.isArray(current) ? current.slice() : [];
       if (!list.includes(id)) {
         this.registry.set(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED, [...list, id]);
       }
+      openBranch(id);
     };
 
     const hotspotsConfig = Object.entries(SCENE3_HOTSPOT_CONFIG).map(([id, cfg]) => ({
@@ -90,18 +149,13 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
     }));
 
     const allHotspotIds = Object.keys(SCENE3_HOTSPOT_CONFIG);
-    const resumeAlreadyComplete =
-      allHotspotIds.length > 0 && allHotspotIds.every((id) => checkedIds.includes(id));
 
     const hotspotGroup = createHotspotGroup(this, {
       hotspots: hotspotsConfig,
       initialCheckedIds: checkedIds,
       onAllChecked: () => {
-        if (resumeAlreadyComplete) {
-          this.time.delayedCall(3500, () => this._onAllHotspotsChecked(dialog, portrait));
-        } else {
-          this._onAllHotspotsChecked(dialog, portrait);
-        }
+        // 不立即触发，等用户点 Back 回到主场景后再触发
+        allHotspotsComplete = true;
       },
     });
     this._hotspotGroup = hotspotGroup;
@@ -110,13 +164,35 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
       title: 'Scene 3 Scouting',
     });
 
-    dialog.say(introLines[0], () => {
-      this.input.once('pointerdown', () => {
-        this.hidePortraitAndDialog(dialog, portrait);
+    // ── 开场对白（skipIntro 时直接隐藏，进入热区） ──────────
+    const boot = this.sys.settings.data || {};
+    const introLines = [
+      "Alright… ground, water, wind, and what's above me. Let's take a proper look.",
+    ];
+    if (boot.skipIntro) {
+      portrait.setAlpha(0);
+      dialog.bg.setAlpha(0);
+      dialog.text.setAlpha(0);
+      dialog.arrow.setAlpha(0);
+    } else {
+      dialog.say(introLines[0], () => {
+        this.input.once('pointerdown', () => {
+          this.hidePortraitAndDialog(dialog, portrait);
+        });
+      });
+    }
+
+    // ── 按 H 直接跳到 inspect ────────────────────────────
+    this.input.keyboard.on('keydown-H', () => {
+      this.registry.remove(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
+      this.cameras.main.fadeOut(400, 0, 0, 0);
+      this.time.delayedCall(400, () => {
+        transitionScene(this, SCENE_KEYS.FIRE_SPOT_INSPECT);
       });
     });
 
-    addSceneBackButton(this);
+    this._branchOpen = () => branchOpen;
+    sceneBackBtnRef = addSceneBackButton(this);
   }
 
   hidePortraitAndDialog(dialog, portrait, durationMs = 300) {
@@ -142,18 +218,11 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
       'Alright. I know what to look for now.',
       "Let me see what's around here…",
     ];
-
     this.showPortraitAndDialog(dialog, portrait);
     this.time.delayedCall(300, () => {
-      _runLines(
-        outroLines,
-        dialog,
-        this,
-        () => {
-          this._playAfterAWhileTransition();
-        },
-        { startLine: 0 },
-      );
+      _runLines(outroLines, dialog, this, () => {
+        this._playAfterAWhileTransition();
+      }, { startLine: 0 });
     });
   }
 
@@ -173,24 +242,19 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
         .setOrigin(0.5)
         .setDepth(100000)
         .setAlpha(0);
-      this.tweens.add({
-        targets: sub,
-        alpha: 0.8,
-        duration: 1000,
-        ease: 'Sine.easeOut',
-      });
+      this.tweens.add({ targets: sub, alpha: 0.8, duration: 1000, ease: 'Sine.easeOut' });
       this.time.delayedCall(1500, () => {
         this.tweens.add({
           targets: sub,
           alpha: 0,
           duration: 400,
           ease: 'Sine.easeIn',
-          onComplete: () => {
-            sub.destroy();
-          },
+          onComplete: () => sub.destroy(),
         });
         this.registry.remove(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
-        console.warn('[Stage 3] Scene 4 not yet implemented. Scene 3 ends here.');
+        this.time.delayedCall(500, () => {
+          transitionScene(this, SCENE_KEYS.FIRE_SPOT_INSPECT);
+        });
       });
     });
   }

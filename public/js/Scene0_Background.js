@@ -53,7 +53,7 @@ class BG0TitleScene extends Phaser.Scene {
     });
 
     // 快速跳转提示
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.91, 'Press S to skip to arrival', {
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.91, 'S — skip to backpack   W — skip to scouting', {
       fontFamily: 'Georgia, serif',
       fontSize: '13px',
       color: '#a08060',
@@ -63,17 +63,22 @@ class BG0TitleScene extends Phaser.Scene {
 
     // 点击 → 淡出进 BG1
     let clicked = false;
-    const goScene = (key) => {
+    const goScene = (key, data) => {
       if (clicked) return;
       clicked = true;
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.time.delayedCall(500, () => {
-        transitionScene(this, key);
+        if (data) {
+          this.scene.start(key, data);
+        } else {
+          transitionScene(this, key);
+        }
       });
     };
 
     this.input.on('pointerdown', () => goScene(SCENE_KEYS.BG1));
     this.input.keyboard.on('keydown-S', () => goScene(SCENE_KEYS.AR2));
+    this.input.keyboard.on('keydown-W', () => goScene('Stage3_Scouting', { skipIntro: true }));
 
     addSceneBackButton(this);
   }

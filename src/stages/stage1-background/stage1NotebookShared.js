@@ -117,9 +117,10 @@ export const PORTRAIT_SLOTS = {
   },
   right: {
     portraitScreenAnchorXRatio: 0.8375,
-    portraitMaxWidthScreenRatio: 0.28, // 从 0.338 改为 0.28
+    portraitMaxWidthScreenRatio: 0.338,
     portraitMaxHeightScreenRatio: 0.806,
-    portraitLiftPx: 88, // 从 0 改为 88
+    portraitLiftPx: 0,
+    portraitBottomBleed: 0,
     portraitAdjustY: 0,
   },
 };

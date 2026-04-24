@@ -231,24 +231,6 @@ export default class FireSpotInspectScene extends Phaser.Scene {
   }
 
   tryConsumeInternalBack() {
-    if (this.zonesEnabled) {
-      this.zonesEnabled = false;
-      this.introStep = 2;
-      this.hintText.setAlpha(0);
-      this.continueBtn.setAlpha(0).disableInteractive();
-      this.nextBtn.setVisible(true).setInteractive({ useHandCursor: true });
-      this.dialogText.setText(
-        '…I need to think about where it will spread, not just where it starts.'
-      );
-      return true;
-    }
-    if (this.introStep > 1) {
-      this.introStep -= 1;
-      if (this.introStep === 1) {
-        this.dialogText.setText('If I\'m building a fire here…');
-      }
-      return true;
-    }
     return false;
   }
 
