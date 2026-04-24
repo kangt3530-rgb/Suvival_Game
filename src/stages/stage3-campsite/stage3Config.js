@@ -12,6 +12,9 @@ export const STAGE3_SCENE_KEYS = {
   SCOUTING_SUB_GROUND: 'Stage3_Scene3SubGround',
   SCOUTING_SUB_WIND: 'Stage3_Scene3SubWind',
   SCOUTING_SUB_OVERHEAD: 'Stage3_Scene3SubOverhead',
+  SITE_INSPECTION: 'Stage3_SiteInspection',
+  SITE_CLOSEUP: 'Stage3_SiteCloseup',
+  DECISION: 'Stage3_Decision',
   // 后续 scene 在此追加
 };
 
@@ -33,6 +36,10 @@ export const STAGE3_ASSETS = {
   BG_SCOUTING_OVERHEAD: { key: 'stage3_scouting_overhead', file: 's3-scouting-overhead.png' },
   /** 仓库内为 `main character-thinking.png`（含空格），非 main-character-thinking.png */
   PORTRAIT_THINKING: { key: 'stage3_thinking', file: 'main character-thinking.png' },
+  /** Scene 4 营地考察 — 主画面与 Site 近景（近景 preload 在子 scene） */
+  BG_INSPECTION_MAIN: { key: 'stage3_inspection_main', file: 's4-inspection-main.png' },
+  BG_SITE_A: { key: 'stage3_site_a', file: 's4-site-a.png' },
+  BG_SITE_B: { key: 'stage3_site_b', file: 's4-site-b.png' },
   // 后续资源在此追加
 };
 
@@ -84,6 +91,34 @@ export const SCENE3_OVERHEAD_HOTSPOT_CONFIG = {
   open: { x: 968, y: 441, radius: 15, label: 'Open sky' },
 };
 
+/**
+ * Scene 4 考察主画面 hotspot — x/y/radius 为游戏逻辑画布（GAME_WIDTH×GAME_HEIGHT），与 ?debug=1 面板一致。
+ */
+export const SCENE4_INSPECTION_HOTSPOT_CONFIG = {
+  siteA: { x: 316, y: 414, radius: 15, label: 'Site A' },
+  siteB: { x: 1013, y: 300, radius: 15, label: 'Site B' },
+};
+
+/**
+ * Scene 4 Site A 近景 — 2560×1440；左下溪、中下洼地、左中树荫、上枯枝。由 ?debug=1 导出逻辑坐标换算回填。
+ */
+export const SCENE4_SITE_A_HOTSPOT_CONFIG = {
+  water: { x: 1188, y: 1128, radius: 30, label: 'Water' },
+  ground: { x: 492, y: 924, radius: 30, label: 'Ground' },
+  wind: { x: 712, y: 514, radius: 30, label: 'Wind' },
+  overhead: { x: 1544, y: 168, radius: 30, label: 'Overhead' },
+};
+
+/**
+ * Scene 4 Site B 近景 — 2560×1440；远溪、中下平地、开阔侧风区、上天空。由 ?debug=1 导出逻辑坐标换算回填。
+ */
+export const SCENE4_SITE_B_HOTSPOT_CONFIG = {
+  water: { x: 1922, y: 1116, radius: 30, label: 'Water' },
+  ground: { x: 650, y: 1056, radius: 30, label: 'Ground' },
+  wind: { x: 1142, y: 896, radius: 30, label: 'Wind' },
+  overhead: { x: 450, y: 636, radius: 30, label: 'Overhead' },
+};
+
 /** scene.registry 的 key 命名空间，避免与项目其他 registry 冲突 */
 export const STAGE3_REGISTRY_KEYS = {
   SCOUTING_CHECKED: 'stage3_scouting_checked', // string[]，已探索过的 hotspot id 数组
@@ -91,4 +126,9 @@ export const STAGE3_REGISTRY_KEYS = {
   SCOUTING_SUB_GROUND_CHECKED: 'stage3_scouting_sub_ground_checked', // string[]，Ground 子画面已探索二级 id
   SCOUTING_SUB_WIND_CHECKED: 'stage3_scouting_sub_wind_checked', // string[]，Wind 子画面已探索二级 id
   SCOUTING_SUB_OVERHEAD_CHECKED: 'stage3_scouting_sub_overhead_checked', // string[]，Overhead 子画面已探索二级 id
+  INSPECTION_CHECKED: 'stage3_inspection_checked', // string[]，Scene 4 已探索 site id
+  SITE_A_CHECKED: 'stage3_site_a_checked', // string[]，Site A 近景二级 hotspot id
+  SITE_B_CHECKED: 'stage3_site_b_checked', // string[]，Site B 近景二级 hotspot id
+  /** 玩家最终营地 — 本 scene 不写，留给 Decision；仅声明 key */
+  CHOSEN_SITE: 'stage3_chosen_site',
 };

@@ -16,6 +16,9 @@ import Stage3Scene3SubWaterScene from '../../src/stages/stage3-campsite/Scene3Su
 import Stage3Scene3SubGroundScene from '../../src/stages/stage3-campsite/Scene3Sub_Ground.js';
 import Stage3Scene3SubWindScene from '../../src/stages/stage3-campsite/Scene3Sub_Wind.js';
 import Stage3Scene3SubOverheadScene from '../../src/stages/stage3-campsite/Scene3Sub_Overhead.js';
+import Stage3SiteInspectionScene from '../../src/stages/stage3-campsite/Scene4_SiteInspection.js';
+import Stage3Scene4SubSiteCloseupScene from '../../src/stages/stage3-campsite/Scene4Sub_SiteCloseup.js';
+import Stage3Scene4DecisionScene from '../../src/stages/stage3-campsite/Scene4_Decision.js';
 import '../../src/scenes/test/TestHotspotScene.js';
 
 /** Phaser 场景 key → 类（由各 Scene 模块挂到 globalThis） */
@@ -47,6 +50,9 @@ var SCENE_KEY_TO_CLASS = {
   Stage3_Scene3SubGround: Stage3Scene3SubGroundScene,
   Stage3_Scene3SubWind: Stage3Scene3SubWindScene,
   Stage3_Scene3SubOverhead: Stage3Scene3SubOverheadScene,
+  Stage3_SiteInspection: Stage3SiteInspectionScene,
+  Stage3_SiteCloseup: Stage3Scene4SubSiteCloseupScene,
+  Stage3_Decision: Stage3Scene4DecisionScene,
 };
 
 /** 默认播放顺序（与发布流程一致）；DEV 时可将其中某一类移到首位启动 */
@@ -78,6 +84,9 @@ var DEFAULT_SCENE_ORDER = [
   Stage3Scene3SubGroundScene,
   Stage3Scene3SubWindScene,
   Stage3Scene3SubOverheadScene,
+  Stage3SiteInspectionScene,
+  Stage3Scene4SubSiteCloseupScene,
+  Stage3Scene4DecisionScene,
 ];
 
 /**
