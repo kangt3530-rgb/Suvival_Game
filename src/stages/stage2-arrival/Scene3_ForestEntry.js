@@ -1,66 +1,80 @@
 import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../../config/GameConfig.js';
+import {
+  configureMainCameraSmoothPixels,
+  setTextureLinearByKey,
+  scaleFullscreenBackgroundImage,
+} from '../../utils/imageQuality.js';
 import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
+import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
+import { addProtagonistIllustration, PORTRAIT_SLOTS } from '../stage1-background/stage1NotebookShared.js';
 
-/** 走向森林入口 */
+/** 森林小径入口 — 对白后前往营地 */
 export default class Scene3ForestEntry extends Phaser.Scene {
   constructor() {
     super({ key: 'AR3ForestScene' });
   }
 
+  preload() {
+    applyAssetPathPrefix(this);
+    this.load.image('bg_forest_path', gameAssetUrl('forest-path.png'));
+    this.load.image('ar3_portrait', gameAssetUrl('main character-png.png'));
+  }
+
   create() {
-    this.cameras.main.setBackgroundColor('#1a2e1a');
-    this.cameras.main.fadeIn(600, 0, 0, 0);
-
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x1a2e1a);
-    this.add
-      .rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000)
-      .setAlpha(0.52)
-      .setDepth(1);
-
-    const forestX = GAME_WIDTH - 160;
-    this.add.rectangle(forestX, GAME_HEIGHT / 2, 260, GAME_HEIGHT, 0x0d1f0d, 0.7);
-
-    const player = this.add.circle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 20, 0xffffff);
-
-    const dialog = createDialogBox(this, GENERIC_DIALOG);
+    const boot = this.sys.settings.data || {};
+    const sl = typeof boot.startLine === 'number' ? boot.startLine : 0;
     const lines = [
       "The herbs… they won't be found in the village.",
       "I'll have to search the forest… and beyond.",
     ];
 
-    const boot = this.sys.settings.data || {};
-    const sl = typeof boot.startLine === 'number' ? boot.startLine : 0;
+    configureMainCameraSmoothPixels(this);
+    this.cameras.main.fadeIn(600, 0, 0, 0);
 
-    const runWalkToCamp = () => {
-      this.tweens.add({
-        targets: player,
-        x: forestX,
-        duration: 1200,
-        ease: 'Sine.easeIn',
-        onComplete: () => {
-          this.cameras.main.fadeOut(600, 0, 0, 0);
-          this.time.delayedCall(600, () => {
-            transitionScene(this, SCENE_KEYS.CAMP);
-          });
-        },
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+
+    const bg = this.add.image(cx, cy, 'bg_forest_path').setOrigin(0.5, 0.5);
+    setTextureLinearByKey(this, 'bg_forest_path');
+    scaleFullscreenBackgroundImage(bg);
+
+    this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000).setAlpha(0.3).setDepth(1);
+
+    const portrait = addProtagonistIllustration(this, 'ar3_portrait', {
+      ...GENERIC_DIALOG,
+      ...PORTRAIT_SLOTS.right,
+    });
+    this._portrait = portrait;
+    if (sl >= lines.length) {
+      portrait.setAlpha(1);
+    } else {
+      portrait.setAlpha(0);
+      this.tweens.add({ targets: portrait, alpha: 1, duration: 600, ease: 'Sine.easeOut' });
+    }
+
+    const dialog = createDialogBox(this, GENERIC_DIALOG);
+
+    const runOutro = () => {
+      this.cameras.main.fadeOut(600, 0, 0, 0);
+      this.time.delayedCall(600, () => {
+        transitionScene(this, SCENE_KEYS.CAMP);
       });
     };
 
     if (sl >= lines.length) {
       this._dialogueLineIndex = lines.length;
-      player.setPosition(forestX, GAME_HEIGHT / 2);
       dialog.say(lines[lines.length - 1], () => {});
       const toCamp = () => {
         this.input.off('pointerdown', toCamp);
-        runWalkToCamp();
+        runOutro();
       };
       this.input.once('pointerdown', toCamp);
       addSceneBackButton(this);
       return;
     }
 
-    _runLines(lines, dialog, this, runWalkToCamp, { startLine: sl });
+    _runLines(lines, dialog, this, runOutro, { startLine: sl });
     addSceneBackButton(this);
   }
 

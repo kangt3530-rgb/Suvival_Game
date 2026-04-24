@@ -81,3 +81,41 @@ export function addDiaryDateLine(scene, text, depth = 6000) {
     .setOrigin(0.5)
     .setDepth(depth);
 }
+
+/**
+ * AR 系列场景的立绘位置预设。
+ * 供 addProtagonistIllustration 使用，通过 spread 语法合并到 dialogLayoutOpts 里。
+ *
+ * 用法示例：
+ *   addProtagonistIllustration(scene, 'my_portrait', {
+ *     ...AR1_ARRIVED_DIALOG,
+ *     ...PORTRAIT_SLOTS.center,
+ *   });
+ *
+ * 两种 slot：
+ *   - center: 主角居中（目前 AR1/AR2/AR3 统一使用）
+ *   - right:  主角在右侧（DialogueUI 式布局；未来扩展用）
+ *
+ * 字段说明：
+ *   - portraitScreenAnchorXRatio:   立绘水平锚点（屏幕宽度的比例，0=左边，1=右边）
+ *   - portraitMaxWidthScreenRatio:  立绘宽度上限（屏幕宽度的比例）
+ *   - portraitMaxHeightScreenRatio: 立绘高度上限（屏幕高度的比例）
+ *   - portraitLiftPx:               立绘向上偏移像素
+ *   - portraitAdjustY:              立绘 Y 微调像素（负号上移）
+ */
+export const PORTRAIT_SLOTS = {
+  center: {
+    portraitScreenAnchorXRatio: 0.5,
+    portraitMaxWidthScreenRatio: 0.487, // 与 Scene1_Arrived 的 0.338 * 1.6 * 0.9 等价
+    portraitMaxHeightScreenRatio: 1.161, // 与 Scene1_Arrived 的 0.806 * 1.6 * 0.9 等价
+    portraitLiftPx: 70,
+    portraitAdjustY: 0,
+  },
+  right: {
+    portraitScreenAnchorXRatio: 0.8375,
+    portraitMaxWidthScreenRatio: 0.28, // 从 0.338 改为 0.28
+    portraitMaxHeightScreenRatio: 0.806,
+    portraitLiftPx: 88, // 从 0 改为 88
+    portraitAdjustY: 0,
+  },
+};
