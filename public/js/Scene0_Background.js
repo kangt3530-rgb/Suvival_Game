@@ -52,16 +52,28 @@ class BG0TitleScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
+    // 快速跳转提示
+    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.91, 'Press S to skip to arrival', {
+      fontFamily: 'Georgia, serif',
+      fontSize: '13px',
+      color: '#a08060',
+    })
+      .setOrigin(0.5)
+      .setDepth(5000);
+
     // 点击 → 淡出进 BG1
     let clicked = false;
-    this.input.on('pointerdown', () => {
+    const goScene = (key) => {
       if (clicked) return;
       clicked = true;
       this.cameras.main.fadeOut(500, 0, 0, 0);
       this.time.delayedCall(500, () => {
-        transitionScene(this, SCENE_KEYS.BG1);
+        transitionScene(this, key);
       });
-    });
+    };
+
+    this.input.on('pointerdown', () => goScene(SCENE_KEYS.BG1));
+    this.input.keyboard.on('keydown-S', () => goScene(SCENE_KEYS.AR2));
 
     addSceneBackButton(this);
   }
