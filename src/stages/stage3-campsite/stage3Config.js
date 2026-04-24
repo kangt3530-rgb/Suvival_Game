@@ -9,6 +9,9 @@ export const STAGE3_SCENE_KEYS = {
   NPC_ENCOUNTER: 'Stage3_NpcEncounter',
   SCOUTING: 'Stage3_Scouting',
   SCOUTING_SUB_WATER: 'Stage3_Scene3SubWater',
+  SCOUTING_SUB_GROUND: 'Stage3_Scene3SubGround',
+  SCOUTING_SUB_WIND: 'Stage3_Scene3SubWind',
+  SCOUTING_SUB_OVERHEAD: 'Stage3_Scene3SubOverhead',
   // 后续 scene 在此追加
 };
 
@@ -34,15 +37,14 @@ export const STAGE3_ASSETS = {
 };
 
 /**
- * Scene 3 Scouting 主画面 hotspot 配置
- * 位置是初始估计值，通过 ?debug=1 + Shift 拖动调整后，用面板"Copy All Coords as JSON"
- * 导出真实坐标回填到这里。
+ * Scene 3 Scouting 主画面 hotspot — x/y/radius 为游戏逻辑画布（GAME_WIDTH×GAME_HEIGHT），
+ * 与 ?debug=1 面板及「Copy JSON」一致。
  */
 export const SCENE3_HOTSPOT_CONFIG = {
-  water: { x: 1280, y: 1180, radius: 30, label: 'Water' },
-  ground: { x: 640, y: 1100, radius: 30, label: 'Ground' },
-  wind: { x: 1920, y: 700, radius: 30, label: 'Wind' },
-  overhead: { x: 700, y: 280, radius: 30, label: 'Overhead' },
+  water: { x: 736, y: 566, radius: 15, label: 'Water' },
+  ground: { x: 1078, y: 567, radius: 15, label: 'Ground' },
+  wind: { x: 923, y: 249, radius: 15, label: 'Wind' },
+  overhead: { x: 350, y: 140, radius: 15, label: 'Overhead' },
 };
 
 /**
@@ -54,8 +56,39 @@ export const SCENE3_WATER_HOTSPOT_CONFIG = {
   far: { x: 458, y: 236, radius: 30, label: 'A bit farther' },
 };
 
+/**
+ * Ground 子画面二级 hotspot — x/y/radius 为游戏逻辑画布（GameConfig 的 GAME_WIDTH×GAME_HEIGHT），
+ * 与 ?debug=1 面板数值及「Copy JSON」导出一致；非 2560×1440 设计稿倍率。
+ */
+export const SCENE3_GROUND_HOTSPOT_CONFIG = {
+  low: { x: 896, y: 649, radius: 15, label: 'Low dip' },
+  slope: { x: 1164, y: 451, radius: 15, label: 'Slope' },
+  flat: { x: 917, y: 346, radius: 15, label: 'Flat high ground' },
+};
+
+/**
+ * Wind 子画面二级 hotspot — x/y/radius 为游戏逻辑画布（GAME_WIDTH×GAME_HEIGHT），
+ * 与 ?debug=1 面板及「Copy JSON」一致。
+ */
+export const SCENE3_WIND_HOTSPOT_CONFIG = {
+  sheltered: { x: 360, y: 550, radius: 15, label: 'Under the trees' },
+  open: { x: 920, y: 550, radius: 15, label: 'Open ground' },
+};
+
+/**
+ * Overhead 子画面二级 hotspot — x/y/radius 为游戏逻辑画布（GAME_WIDTH×GAME_HEIGHT），
+ * 与 ?debug=1 面板一致；仰视构图，热区偏画面上半部。
+ */
+export const SCENE3_OVERHEAD_HOTSPOT_CONFIG = {
+  deadwood: { x: 394, y: 242, radius: 15, label: 'Dead branches overhead' },
+  open: { x: 968, y: 441, radius: 15, label: 'Open sky' },
+};
+
 /** scene.registry 的 key 命名空间，避免与项目其他 registry 冲突 */
 export const STAGE3_REGISTRY_KEYS = {
   SCOUTING_CHECKED: 'stage3_scouting_checked', // string[]，已探索过的 hotspot id 数组
   SCOUTING_SUB_WATER_CHECKED: 'stage3_scouting_sub_water_checked', // string[]，Water 子画面已探索二级 id
+  SCOUTING_SUB_GROUND_CHECKED: 'stage3_scouting_sub_ground_checked', // string[]，Ground 子画面已探索二级 id
+  SCOUTING_SUB_WIND_CHECKED: 'stage3_scouting_sub_wind_checked', // string[]，Wind 子画面已探索二级 id
+  SCOUTING_SUB_OVERHEAD_CHECKED: 'stage3_scouting_sub_overhead_checked', // string[]，Overhead 子画面已探索二级 id
 };

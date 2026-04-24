@@ -17,9 +17,6 @@ import { addProtagonistIllustration, PORTRAIT_SLOTS } from '../stage1-background
 import { createHotspotGroup } from '../../utils/hotspot.js';
 import { attachHotspotDebugPanel } from '../../utils/hotspotDebugPanel.js';
 
-const SCENE3_DESIGN_WIDTH = 2560;
-const SCENE3_DESIGN_HEIGHT = 1440;
-
 /** Stage 3 — Scouting 主画面（四维度环境评估 hotspot） */
 export default class Stage3ScoutingScene extends Phaser.Scene {
   constructor() {
@@ -96,6 +93,8 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
       const key = BRANCH_KEY_MAP[id];
       if (!key) return;
       branchOpen = true;
+      // 分支层 depth 低于 hotspot，否则会叠在分支图之上
+      this._setMainHotspotsVisible(false);
       branchImg.setTexture(key).setVisible(true);
       setTextureLinearByKey(this, key);
       scaleFullscreenBackgroundImage(branchImg);
@@ -107,6 +106,7 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
       branchOpen = false;
       branchImg.setVisible(false);
       backBtn.setVisible(false);
+      this._setMainHotspotsVisible(true);
       if (sceneBackBtnRef) sceneBackBtnRef.setVisible(true);
       if (allHotspotsComplete) {
         allHotspotsComplete = false;
@@ -120,32 +120,47 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
     const rawChecked = this.registry.get(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
     const checkedIds = Array.isArray(rawChecked) ? rawChecked.slice() : [];
 
-    const sx = GAME_WIDTH / SCENE3_DESIGN_WIDTH;
-    const sy = GAME_HEIGHT / SCENE3_DESIGN_HEIGHT;
-
     const onHotspotClick = (id) => {
       // Water：独立子场景（Back 时写 registry + markChecked），不打开分支覆盖层
       if (id === 'water') {
+        this._setMainHotspotsVisible(false);
         this.cameras.main.fadeOut(400, 0, 0, 0);
         this.time.delayedCall(400, () => {
           transitionScene(this, STAGE3_SCENE_KEYS.SCOUTING_SUB_WATER);
         });
         return;
       }
-      hotspotGroup.markChecked(id);
-      const current = this.registry.get(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
-      const list = Array.isArray(current) ? current.slice() : [];
-      if (!list.includes(id)) {
-        this.registry.set(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED, [...list, id]);
+      if (id === 'ground') {
+        this._setMainHotspotsVisible(false);
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.time.delayedCall(400, () => {
+          transitionScene(this, STAGE3_SCENE_KEYS.SCOUTING_SUB_GROUND);
+        });
+        return;
       }
-      openBranch(id);
+      if (id === 'wind') {
+        this._setMainHotspotsVisible(false);
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.time.delayedCall(400, () => {
+          transitionScene(this, STAGE3_SCENE_KEYS.SCOUTING_SUB_WIND);
+        });
+        return;
+      }
+      if (id === 'overhead') {
+        this._setMainHotspotsVisible(false);
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.time.delayedCall(400, () => {
+          transitionScene(this, STAGE3_SCENE_KEYS.SCOUTING_SUB_OVERHEAD);
+        });
+        return;
+      }
     };
 
     const hotspotsConfig = Object.entries(SCENE3_HOTSPOT_CONFIG).map(([id, cfg]) => ({
       id,
-      x: cfg.x * sx,
-      y: cfg.y * sy,
-      radius: cfg.radius * sx,
+      x: cfg.x,
+      y: cfg.y,
+      radius: cfg.radius,
       label: cfg.label,
       depth: 4000,
       debugDraggable: true,
@@ -201,6 +216,16 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
 
     this._branchOpen = () => branchOpen;
     sceneBackBtnRef = addSceneBackButton(this);
+  }
+
+  /** 主画面四个维度 hotspot（depth 4000）在分支/子场景切换时隐藏，避免叠在分支图或残留到下一 scene */
+  _setMainHotspotsVisible(visible) {
+    const g = this._hotspotGroup;
+    if (!g || !g.hotspotsById) return;
+    const v = !!visible;
+    for (const api of g.hotspotsById.values()) {
+      api.container.setVisible(v);
+    }
   }
 
   hidePortraitAndDialog(dialog, portrait, durationMs = 300) {
