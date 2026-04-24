@@ -16,6 +16,7 @@ export const STAGE3_SCENE_KEYS = {
   SITE_CLOSEUP: 'Stage3_SiteCloseup',
   DECISION: 'Stage3_Decision',
   NIGHT: 'Stage3_Night',
+  MORNING: 'Stage3_Morning',
   // 后续 scene 在此追加
 };
 
@@ -46,6 +47,9 @@ export const STAGE3_ASSETS = {
   BG_SITE_A_NIGHT: { key: 'stage3_site_a_night', file: 's5-site-a-night.png' },
   BG_SITE_B_DUSK: { key: 'stage3_site_b_dusk', file: 's5-site-b-dusk.png' },
   BG_SITE_B_NIGHT: { key: 'stage3_site_b_night', file: 's5-site-b-night.png' },
+  /** Scene 6 — 晨光 */
+  BG_SITE_A_MORNING: { key: 'stage3_site_a_morning', file: 's6-site-a-morning.png' },
+  BG_SITE_B_MORNING: { key: 'stage3_site_b_morning', file: 's6-site-b-morning.png' },
   // 后续资源在此追加
 };
 

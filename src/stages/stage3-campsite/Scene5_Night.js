@@ -8,6 +8,7 @@ import {
 import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
 import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
 import { addProtagonistIllustration, PORTRAIT_SLOTS } from '../stage1-background/stage1NotebookShared.js';
+import { transitionScene } from '../../utils/SceneNav.js';
 
 const PART1_LINES = [
   'Alright. This is home for tonight.',
@@ -156,7 +157,7 @@ export default class Stage3NightScene extends Phaser.Scene {
       onComplete: () => {
         this.cameras.main.fadeOut(700, 0, 0, 0);
         this.time.delayedCall(700, () => {
-          console.warn('[Stage 3] Scene 6 not yet implemented. Chosen site:', this._site);
+          transitionScene(this, STAGE3_SCENE_KEYS.MORNING);
         });
       },
     });

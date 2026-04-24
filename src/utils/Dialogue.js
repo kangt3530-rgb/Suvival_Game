@@ -82,7 +82,7 @@ export const AR1_ARRIVED_DIALOG = {
  *   portraitBottomBleed?: number,
  *   portraitLiftPx?: number,
  * }} [layoutOpts] 不传则用默认（略加大并上移）；日记场景传入 `STAGE1_DIARY_DIALOG`
- * @returns {{ say: Function, clear: Function, bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text, arrow: Phaser.GameObjects.Text }}
+ * @returns {{ say: Function, clear: Function, finishNow: Function, bg: Phaser.GameObjects.Rectangle, text: Phaser.GameObjects.Text, arrow: Phaser.GameObjects.Text }}
  */
 export function createDialogBox(scene, layoutOpts = {}) {
   const L = getDialogBoxLayout(layoutOpts);
@@ -125,6 +125,13 @@ export function createDialogBox(scene, layoutOpts = {}) {
   let _typingEvent = null;
   let _fullText = '';
   let _charIndex = 0;
+  let _onCompleteCallback = null;
+
+  function _fireOnCompleteOnce() {
+    const cb = _onCompleteCallback;
+    _onCompleteCallback = null;
+    if (typeof cb === 'function') cb();
+  }
 
   function _finishNow() {
     if (_typingEvent) {
@@ -133,6 +140,7 @@ export function createDialogBox(scene, layoutOpts = {}) {
     }
     txt.setText(_fullText);
     arrow.setAlpha(1);
+    _fireOnCompleteOnce();
   }
 
   function say(text, onComplete) {
@@ -140,14 +148,21 @@ export function createDialogBox(scene, layoutOpts = {}) {
       _finishNow();
     }
 
-    _fullText = text;
+    _fullText = text != null ? String(text) : '';
     _charIndex = 0;
+    _onCompleteCallback = onComplete;
     txt.setText('');
     arrow.setAlpha(0);
 
+    if (_fullText.length === 0) {
+      arrow.setAlpha(1);
+      _fireOnCompleteOnce();
+      return;
+    }
+
     _typingEvent = scene.time.addEvent({
       delay: 35,
-      repeat: text.length - 1,
+      repeat: _fullText.length - 1,
       callback: () => {
         _charIndex++;
         txt.setText(_fullText.slice(0, _charIndex));
@@ -155,7 +170,7 @@ export function createDialogBox(scene, layoutOpts = {}) {
         if (_charIndex >= _fullText.length) {
           _typingEvent = null;
           arrow.setAlpha(1);
-          if (typeof onComplete === 'function') onComplete();
+          _fireOnCompleteOnce();
         }
       },
     });
@@ -166,13 +181,14 @@ export function createDialogBox(scene, layoutOpts = {}) {
       _typingEvent.remove(false);
       _typingEvent = null;
     }
+    _onCompleteCallback = null;
     _fullText = '';
     _charIndex = 0;
     txt.setText('');
     arrow.setAlpha(0);
   }
 
-  return { say, clear, bg, text: txt, arrow };
+  return { say, clear, finishNow: _finishNow, bg, text: txt, arrow };
 }
 
 /**
@@ -205,10 +221,7 @@ export function _runLines(lines, dialog, scene, onFinished, resume, hooks) {
 
   function advance() {
     if (!ready) {
-      dialog.say(dialog.text.text + '', () => {
-        ready = true;
-      });
-      ready = true;
+      dialog.finishNow();
       return;
     }
     index++;
@@ -237,7 +250,7 @@ export function _runLines(lines, dialog, scene, onFinished, resume, hooks) {
     });
     scene.input.on('pointerdown', function resumeAdvance() {
       if (!ready) {
-        ready = true;
+        dialog.finishNow();
         return;
       }
       scene.input.off('pointerdown', resumeAdvance);

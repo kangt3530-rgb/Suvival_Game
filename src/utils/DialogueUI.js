@@ -135,7 +135,14 @@ export default class DialogueUI {
     this._typingEvent = null;
     this._fullText = '';
     this._charIndex = 0;
+    this._onCompleteCallback = null;
     this._currentName = '';
+  }
+
+  _fireOnCompleteOnce() {
+    const cb = this._onCompleteCallback;
+    this._onCompleteCallback = null;
+    if (typeof cb === 'function') cb();
   }
 
   _layoutPortraits() {
@@ -255,6 +262,7 @@ export default class DialogueUI {
     }
     this.bodyText.setText(this._fullText);
     this.arrow.setAlpha(1);
+    this._fireOnCompleteOnce();
   }
 
   /**
@@ -267,20 +275,21 @@ export default class DialogueUI {
       this._finishTypewriterNow();
     }
 
-    this._fullText = text;
+    this._fullText = text != null ? String(text) : '';
     this._charIndex = 0;
+    this._onCompleteCallback = onComplete;
     this.bodyText.setText('');
     this.arrow.setAlpha(0);
 
-    if (!text || text.length === 0) {
+    if (this._fullText.length === 0) {
       this.arrow.setAlpha(1);
-      if (typeof onComplete === 'function') onComplete();
+      this._fireOnCompleteOnce();
       return;
     }
 
     this._typingEvent = this.scene.time.addEvent({
       delay: this.typewriterDelayMs,
-      repeat: text.length - 1,
+      repeat: this._fullText.length - 1,
       callback: () => {
         this._charIndex++;
         this.bodyText.setText(this._fullText.slice(0, this._charIndex));
@@ -288,7 +297,7 @@ export default class DialogueUI {
         if (this._charIndex >= this._fullText.length) {
           this._typingEvent = null;
           this.arrow.setAlpha(1);
-          if (typeof onComplete === 'function') onComplete();
+          this._fireOnCompleteOnce();
         }
       },
     });
@@ -299,6 +308,7 @@ export default class DialogueUI {
       this._typingEvent.remove(false);
       this._typingEvent = null;
     }
+    this._onCompleteCallback = null;
     this._fullText = '';
     this._charIndex = 0;
     this.bodyText.setText('');
@@ -306,6 +316,7 @@ export default class DialogueUI {
   }
 
   destroy() {
+    this._onCompleteCallback = null;
     if (this._typingEvent) {
       this._typingEvent.remove(false);
       this._typingEvent = null;
@@ -343,6 +354,7 @@ export function createDialogueUI(scene, options) {
   return {
     say: (t, c) => ui.say(t, c),
     clear: () => ui.clear(),
+    finishNow: () => ui._finishTypewriterNow(),
     bg: ui.bg,
     text: ui.bodyText,
     arrow: ui.arrow,

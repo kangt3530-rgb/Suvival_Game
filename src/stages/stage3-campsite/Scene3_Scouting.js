@@ -1,4 +1,4 @@
-import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../../config/GameConfig.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../../config/GameConfig.js';
 import {
   STAGE3_SCENE_KEYS,
   STAGE3_ASSETS,
@@ -227,12 +227,12 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
       });
     }
 
-    // ── 按 H 直接跳到 inspect ────────────────────────────
+    // ── 按 H 直接跳到 Scene 4 营地考察（调试用） ────────────────────────────
     this.input.keyboard.on('keydown-H', () => {
       this.registry.remove(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
       this.cameras.main.fadeOut(400, 0, 0, 0);
       this.time.delayedCall(400, () => {
-        transitionScene(this, SCENE_KEYS.FIRE_SPOT_INSPECT);
+        transitionScene(this, STAGE3_SCENE_KEYS.SITE_INSPECTION);
       });
     });
 
@@ -312,7 +312,7 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
         });
         this.registry.remove(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
         this.time.delayedCall(500, () => {
-          transitionScene(this, SCENE_KEYS.FIRE_SPOT_INSPECT);
+          transitionScene(this, STAGE3_SCENE_KEYS.SITE_INSPECTION);
         });
       });
     });
