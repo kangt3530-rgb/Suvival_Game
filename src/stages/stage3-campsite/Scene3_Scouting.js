@@ -119,6 +119,7 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
     // ── Hotspot 配置 ──────────────────────────────────────
     const rawChecked = this.registry.get(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
     const checkedIds = Array.isArray(rawChecked) ? rawChecked.slice() : [];
+    const completedCount = checkedIds.length;
 
     const onHotspotClick = (id) => {
       // Water：独立子场景（Back 时写 registry + markChecked），不打开分支覆盖层
@@ -187,21 +188,42 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
       title: 'Scene 3 Scouting',
     });
 
-    // ── 开场对白（skipIntro 时直接隐藏，进入热区） ──────────
+    // ── 开场 / 从子画面返回后的进度一句（skipIntro 时直接隐藏） ──────────
     const boot = this.sys.settings.data || {};
-    const introLines = [
-      "Alright… ground, water, wind, and what's above me. Let's take a proper look.",
-    ];
+    const introLine =
+      "Alright… ground, water, wind, and what's above me. Let's take a proper look.";
+    const progressByRemaining = {
+      3: 'Three more to go…',
+      2: 'Two more to go…',
+      1: 'One more to go…',
+    };
+
     if (boot.skipIntro) {
       portrait.setAlpha(0);
       dialog.bg.setAlpha(0);
       dialog.text.setAlpha(0);
       dialog.arrow.setAlpha(0);
-    } else {
-      dialog.say(introLines[0], () => {
+    } else if (completedCount === 0) {
+      dialog.say(introLine, () => {
         this.input.once('pointerdown', () => {
           this.hidePortraitAndDialog(dialog, portrait);
         });
+      });
+    } else if (completedCount < 4) {
+      const remaining = 4 - completedCount;
+      const progressLine = progressByRemaining[remaining];
+      if (progressLine) {
+        dialog.clear();
+        this.showPortraitAndDialog(dialog, portrait);
+        dialog.say(progressLine, () => {
+          this.input.once('pointerdown', () => {
+            this.hidePortraitAndDialog(dialog, portrait);
+          });
+        });
+      }
+    } else {
+      this.time.delayedCall(100, () => {
+        this._onAllHotspotsChecked(dialog, portrait);
       });
     }
 
