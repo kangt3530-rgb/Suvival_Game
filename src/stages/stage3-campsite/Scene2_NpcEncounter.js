@@ -31,6 +31,7 @@ export function mixinCampSelectScene2(Proto) {
         t: 'Traveler: "Well that I can\'t help you. But I have to warn you, if you\'re staying out here for the night, don\'t just pick the first place you see, that\'s how you get into trouble."',
       },
       { t: 'You: "What should I look for?"' },
+      
       { t: 'Traveler: "Ground, water, wind… and also what\'s above you."' },
     ];
 
