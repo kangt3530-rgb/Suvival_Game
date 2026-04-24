@@ -65,7 +65,14 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
     const sy = GAME_HEIGHT / SCENE3_DESIGN_HEIGHT;
 
     const onHotspotClick = (id) => {
-      console.log('[Scene3] Hotspot clicked:', id);
+      if (id === 'water') {
+        this.cameras.main.fadeOut(400, 0, 0, 0);
+        this.time.delayedCall(400, () => {
+          transitionScene(this, STAGE3_SCENE_KEYS.SCOUTING_SUB_WATER);
+        });
+        return;
+      }
+      console.log('[Scene3] Hotspot clicked (not yet implemented):', id);
       hotspotGroup.markChecked(id);
       const current = this.registry.get(STAGE3_REGISTRY_KEYS.SCOUTING_CHECKED);
       const list = Array.isArray(current) ? current.slice() : [];
@@ -140,8 +147,11 @@ export default class Stage3ScoutingScene extends Phaser.Scene {
   _onAllHotspotsChecked(dialog, portrait) {
     const outroLines = [
       'Alright. I know what to look for now.',
-      "Let me see what's around here…",
+      "Let me see what's actually around here…",
     ];
+
+    // 避免淡入时仍显示开场独白的旧文案（dialog.text 在隐藏期间仍保留全文）
+    dialog.clear();
 
     this.showPortraitAndDialog(dialog, portrait);
     this.time.delayedCall(300, () => {

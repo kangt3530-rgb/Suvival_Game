@@ -8,6 +8,7 @@ export const STAGE3_SCENE_KEYS = {
   ENTER_FOREST: 'Stage3_EnterForest',
   NPC_ENCOUNTER: 'Stage3_NpcEncounter',
   SCOUTING: 'Stage3_Scouting',
+  SCOUTING_SUB_WATER: 'Stage3_Scene3SubWater',
   // 后续 scene 在此追加
 };
 
@@ -44,7 +45,17 @@ export const SCENE3_HOTSPOT_CONFIG = {
   overhead: { x: 700, y: 280, radius: 30, label: 'Overhead' },
 };
 
+/**
+ * Water 子画面二级 hotspot — 初始估计值，用 ?debug=1 + Shift 拖动调整后回填（导出为逻辑坐标时需按设计分辨率换算）
+ */
+export const SCENE3_WATER_HOTSPOT_CONFIG = {
+  /** 由 debug 导出 close≈(941,315) far≈(229,118) r=15（逻辑坐标）换算到 2560×1440 */
+  close: { x: 1882, y: 630, radius: 30, label: 'Close to water' },
+  far: { x: 458, y: 236, radius: 30, label: 'A bit farther' },
+};
+
 /** scene.registry 的 key 命名空间，避免与项目其他 registry 冲突 */
 export const STAGE3_REGISTRY_KEYS = {
   SCOUTING_CHECKED: 'stage3_scouting_checked', // string[]，已探索过的 hotspot id 数组
+  SCOUTING_SUB_WATER_CHECKED: 'stage3_scouting_sub_water_checked', // string[]，Water 子画面已探索二级 id
 };
