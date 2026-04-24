@@ -39,10 +39,6 @@ export default class Stage3NpcEncounterScene extends Phaser.Scene {
     const portraitOldman = addProtagonistIllustration(this, STAGE3_ASSETS.PORTRAIT_OLDMAN.key, {
       ...GENERIC_DIALOG,
       ...PORTRAIT_SLOTS.right,
-      /** 全身立绘在相同上限下略小于 AR3 式半身，略放大以与主角切换时体量接近 */
-      portraitScaleMultiplier: 1.22,
-      /** 下移使头顶与主角同一水平，脚底可没入对话框下缘 / 画面下缘剪裁 */
-      portraitAdjustY: 220,
     });
     const portraitPlayer = addProtagonistIllustration(this, STAGE3_ASSETS.PORTRAIT_PLAYER_PNG.key, {
       ...GENERIC_DIALOG,
