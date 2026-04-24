@@ -15,6 +15,7 @@ export const STAGE3_SCENE_KEYS = {
   SITE_INSPECTION: 'Stage3_SiteInspection',
   SITE_CLOSEUP: 'Stage3_SiteCloseup',
   DECISION: 'Stage3_Decision',
+  NIGHT: 'Stage3_Night',
   // 后续 scene 在此追加
 };
 
@@ -40,6 +41,11 @@ export const STAGE3_ASSETS = {
   BG_INSPECTION_MAIN: { key: 'stage3_inspection_main', file: 's4-inspection-main.png' },
   BG_SITE_A: { key: 'stage3_site_a', file: 's4-site-a.png' },
   BG_SITE_B: { key: 'stage3_site_b', file: 's4-site-b.png' },
+  /** Scene 5 — 入夜 / 深夜 */
+  BG_SITE_A_DUSK: { key: 'stage3_site_a_dusk', file: 's5-site-a-dusk.png' },
+  BG_SITE_A_NIGHT: { key: 'stage3_site_a_night', file: 's5-site-a-night.png' },
+  BG_SITE_B_DUSK: { key: 'stage3_site_b_dusk', file: 's5-site-b-dusk.png' },
+  BG_SITE_B_NIGHT: { key: 'stage3_site_b_night', file: 's5-site-b-night.png' },
   // 后续资源在此追加
 };
 

@@ -19,6 +19,7 @@ import Stage3Scene3SubOverheadScene from '../../src/stages/stage3-campsite/Scene
 import Stage3SiteInspectionScene from '../../src/stages/stage3-campsite/Scene4_SiteInspection.js';
 import Stage3Scene4SubSiteCloseupScene from '../../src/stages/stage3-campsite/Scene4Sub_SiteCloseup.js';
 import Stage3Scene4DecisionScene from '../../src/stages/stage3-campsite/Scene4_Decision.js';
+import Stage3NightScene from '../../src/stages/stage3-campsite/Scene5_Night.js';
 import '../../src/scenes/test/TestHotspotScene.js';
 
 /** Phaser 场景 key → 类（由各 Scene 模块挂到 globalThis） */
@@ -53,6 +54,7 @@ var SCENE_KEY_TO_CLASS = {
   Stage3_SiteInspection: Stage3SiteInspectionScene,
   Stage3_SiteCloseup: Stage3Scene4SubSiteCloseupScene,
   Stage3_Decision: Stage3Scene4DecisionScene,
+  Stage3_Night: Stage3NightScene,
 };
 
 /** 默认播放顺序（与发布流程一致）；DEV 时可将其中某一类移到首位启动 */
@@ -87,6 +89,7 @@ var DEFAULT_SCENE_ORDER = [
   Stage3SiteInspectionScene,
   Stage3Scene4SubSiteCloseupScene,
   Stage3Scene4DecisionScene,
+  Stage3NightScene,
 ];
 
 /**

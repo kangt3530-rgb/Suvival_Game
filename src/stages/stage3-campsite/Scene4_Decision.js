@@ -12,6 +12,7 @@ import {
 } from '../../utils/imageQuality.js';
 import { createDialogBox, GENERIC_DIALOG } from '../../utils/Dialogue.js';
 import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
+import { transitionScene } from '../../utils/SceneNav.js';
 import { addProtagonistIllustration, PORTRAIT_SLOTS } from '../stage1-background/stage1NotebookShared.js';
 
 const LAYER_RADIUS_MULTS = [1.0, 1.3, 1.6, 2.0];
@@ -119,10 +120,7 @@ export default class Stage3Scene4DecisionScene extends Phaser.Scene {
         this.registry.set(STAGE3_REGISTRY_KEYS.CHOSEN_SITE, letter);
         this.cameras.main.fadeOut(700, 0, 0, 0);
         this.time.delayedCall(700, () => {
-          console.warn(
-            '[Stage 3] Scene 5 not yet implemented. Chosen site:',
-            this.registry.get(STAGE3_REGISTRY_KEYS.CHOSEN_SITE)
-          );
+          transitionScene(this, STAGE3_SCENE_KEYS.NIGHT);
         });
       });
     };
