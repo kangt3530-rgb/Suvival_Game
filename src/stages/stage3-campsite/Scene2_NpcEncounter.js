@@ -1,71 +1,127 @@
-/**
- * Campsite flow — state chunk (applied to CampSelectScene prototype).
- */
-export function mixinCampSelectScene2(Proto) {
-  Object.assign(Proto.prototype, {
-  buildScene2NPCEncounter() {
-    const travelerPos = this.cartesianToIso(140, 60);
-    const firePos = this.cartesianToIso(220, 100);
+import { GAME_WIDTH, GAME_HEIGHT } from '../../config/GameConfig.js';
+import { STAGE3_SCENE_KEYS, STAGE3_ASSETS } from './stage3Config.js';
+import {
+  configureMainCameraSmoothPixels,
+  setTextureLinearByKey,
+  scaleFullscreenBackgroundImage,
+} from '../../utils/imageQuality.js';
+import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
+import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
+import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
+import { addProtagonistIllustration, PORTRAIT_SLOTS } from '../stage1-background/stage1NotebookShared.js';
 
-    const traveler = this.add.circle(travelerPos.x, travelerPos.y, 34, 0x888888);
-    traveler.setStrokeStyle(2, 0x555555);
-    traveler.setDepth(travelerPos.y);
-    this.pushStage(traveler);
+/** Stage 3 — 森林小径上与老人相遇 */
+export default class Stage3NpcEncounterScene extends Phaser.Scene {
+  constructor() {
+    super({ key: STAGE3_SCENE_KEYS.NPC_ENCOUNTER });
+  }
 
-    const fire = this.add.circle(firePos.x, firePos.y, 9, 0xe02020);
-    fire.setDepth(firePos.y + 1);
-    this.pushStage(fire);
-    this.tweens.add({
-      targets: fire,
-      alpha: 0.35,
-      duration: 500,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
+  preload() {
+    applyAssetPathPrefix(this);
+    this.load.image(STAGE3_ASSETS.BG_NPC_MEET.key, gameAssetUrl(STAGE3_ASSETS.BG_NPC_MEET.file));
+    this.load.image(STAGE3_ASSETS.PORTRAIT_PLAYER_PNG.key, gameAssetUrl(STAGE3_ASSETS.PORTRAIT_PLAYER_PNG.file));
+    this.load.image(STAGE3_ASSETS.PORTRAIT_OLDMAN.key, gameAssetUrl(STAGE3_ASSETS.PORTRAIT_OLDMAN.file));
+  }
+
+  create() {
+    configureMainCameraSmoothPixels(this);
+    this.cameras.main.fadeIn(600, 0, 0, 0);
+
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
+
+    const bg = this.add.image(cx, cy, STAGE3_ASSETS.BG_NPC_MEET.key).setOrigin(0.5, 0.5);
+    setTextureLinearByKey(this, STAGE3_ASSETS.BG_NPC_MEET.key);
+    scaleFullscreenBackgroundImage(bg);
+
+    this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000).setAlpha(0.45).setDepth(1);
+
+    const portraitOldman = addProtagonistIllustration(this, STAGE3_ASSETS.PORTRAIT_OLDMAN.key, {
+      ...GENERIC_DIALOG,
+      ...PORTRAIT_SLOTS.right,
+      /** 全身立绘在相同上限下略小于 AR3 式半身，略放大以与主角切换时体量接近 */
+      portraitScaleMultiplier: 1.22,
+      /** 下移使头顶与主角同一水平，脚底可没入对话框下缘 / 画面下缘剪裁 */
+      portraitAdjustY: 220,
+    });
+    const portraitPlayer = addProtagonistIllustration(this, STAGE3_ASSETS.PORTRAIT_PLAYER_PNG.key, {
+      ...GENERIC_DIALOG,
+      ...PORTRAIT_SLOTS.right,
     });
 
-    const lines = [
-      { t: 'Traveler: "What are you doing out here?"' },
-      { t: 'You: "I am looking for some herbs."' },
+    portraitOldman.setAlpha(1);
+    portraitPlayer.setAlpha(0);
+
+    const dialogueData = [
+      { speaker: 'oldman', text: "What are you doing out here?" },
+      { speaker: 'player', text: "I'm looking for some herbs." },
       {
-        t: 'Traveler: "Well that I can\'t help you. But I have to warn you, if you\'re staying out here for the night, don\'t just pick the first place you see, that\'s how you get into trouble."',
+        speaker: 'oldman',
+        text: "Well, that I can't help you with. But I have to warn you—if you're staying out here for the night, don't just pick the first place you see. That's how you get into trouble.",
       },
-      { t: 'You: "What should I look for?"' },
-      
-      { t: 'Traveler: "Ground, water, wind… and also what\'s above you."' },
+      { speaker: 'player', text: 'What should I look for?' },
+      {
+        speaker: 'oldman',
+        text: "Ground, water, wind… and what's above you. Check all four, and you'll be alright.",
+      },
+      { speaker: 'oldman', text: 'Safe travels.' },
     ];
 
-    let idx = 0;
-    this.dialogText.setText(lines[0].t);
+    const lines = dialogueData.map((d) => d.text);
 
-    const nextBtn = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Next', {
-        fontFamily: 'Segoe UI, Arial, sans-serif',
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#5c3d2e',
-        padding: { x: 22, y: 10 },
-      })
-      .setOrigin(0.5)
-      .setDepth(5002)
-      .setInteractive({ useHandCursor: true });
-    this.pushStage(nextBtn);
-
-    const advance = () => {
-      idx += 1;
-      if (idx < lines.length) {
-        this.dialogText.setText(lines[idx].t);
-        if (idx === lines.length - 1) {
-          nextBtn.setText('Continue');
-        }
-      } else {
-        this.enterState(3);
-      }
+    const SWITCH_MS = 250;
+    const switchSpeaker = (speaker) => {
+      const targetOldman = speaker === 'oldman' ? 1 : 0;
+      const targetPlayer = speaker === 'player' ? 1 : 0;
+      this.tweens.add({ targets: portraitOldman, alpha: targetOldman, duration: SWITCH_MS, ease: 'Sine.easeOut' });
+      this.tweens.add({ targets: portraitPlayer, alpha: targetPlayer, duration: SWITCH_MS, ease: 'Sine.easeOut' });
     };
 
-    nextBtn.on('pointerdown', advance);
-    nextBtn.on('pointerover', () => this.input.setDefaultCursor('pointer'));
-    nextBtn.on('pointerout', () => this.input.setDefaultCursor('default'));
+    const dialog = createDialogBox(this, GENERIC_DIALOG);
+
+    const boot = this.sys.settings.data || {};
+    const startLine = typeof boot.startLine === 'number' ? boot.startLine : 0;
+
+    if (startLine < dialogueData.length) {
+      const initialSpeaker = dialogueData[startLine].speaker;
+      portraitOldman.setAlpha(initialSpeaker === 'oldman' ? 1 : 0);
+      portraitPlayer.setAlpha(initialSpeaker === 'player' ? 1 : 0);
+    }
+
+    _runLines(
+      lines,
+      dialog,
+      this,
+      () => {
+        this.tweens.add({
+          targets: portraitOldman,
+          alpha: 0,
+          duration: 800,
+          ease: 'Sine.easeOut',
+          onComplete: () => {
+            this.cameras.main.fadeOut(600, 0, 0, 0);
+            this.time.delayedCall(600, () => {
+              transitionScene(this, STAGE3_SCENE_KEYS.SCOUTING);
+            });
+          },
+        });
+      },
+      { startLine },
+      {
+        onLineChange: (i) => {
+          if (i < dialogueData.length) {
+            switchSpeaker(dialogueData[i].speaker);
+          }
+        },
+      }
+    );
+
+    addSceneBackButton(this);
   }
-  });
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
+  }
 }
+
+// 注册：在 MainConfig.js 的 SCENE_KEY_TO_CLASS 和 DEFAULT_SCENE_ORDER 中手动添加

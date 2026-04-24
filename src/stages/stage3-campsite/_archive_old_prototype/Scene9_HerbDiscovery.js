@@ -1,8 +1,8 @@
 /**
  * Campsite flow — state chunk (applied to CampSelectScene prototype).
  */
-import { SCENE_KEYS } from '../../config/GameConfig.js';
-import { transitionSceneNoHistory } from '../../utils/SceneNav.js';
+import { SCENE_KEYS } from '../../../config/GameConfig.js';
+import { transitionSceneNoHistory } from '../../../utils/SceneNav.js';
 
 export function mixinCampSelectScene9(Proto) {
   Object.assign(Proto.prototype, {

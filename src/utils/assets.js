@@ -11,3 +11,24 @@ export function applyAssetPathPrefix(scene) {
 export function gameAssetUrl(fileName) {
   return 'assets/' + String(fileName).split('/').map(encodeURIComponent).join('/');
 }
+
+/**
+ * 在当前场景停留期间，把下一关要用的贴图提前塞进 Loader（已在 cache 则跳过）。
+ * 减轻 `scene.start` 后下一场景 preload 带来的纯色底 / 黑屏断层。
+ * @param {Phaser.Scene} scene
+ * @param {Array<{ key: string, file: string }>} entries
+ */
+export function warmTextureCache(scene, entries) {
+  applyAssetPathPrefix(scene);
+  let queued = 0;
+  for (const e of entries) {
+    if (!e || !e.key || !e.file) continue;
+    if (!scene.textures.exists(e.key)) {
+      scene.load.image(e.key, gameAssetUrl(e.file));
+      queued++;
+    }
+  }
+  if (queued > 0) {
+    scene.load.start();
+  }
+}

@@ -1,15 +1,16 @@
-import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../../config/GameConfig.js';
+import { GAME_WIDTH, GAME_HEIGHT } from '../../config/GameConfig.js';
 import {
   configureMainCameraSmoothPixels,
   setTextureLinearByKey,
   scaleFullscreenBackgroundImage,
 } from '../../utils/imageQuality.js';
 import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
-import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
+import { applyAssetPathPrefix, gameAssetUrl, warmTextureCache } from '../../utils/assets.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
 import { addProtagonistIllustration, PORTRAIT_SLOTS } from '../stage1-background/stage1NotebookShared.js';
+import { STAGE3_SCENE_KEYS, STAGE3_ASSETS } from '../stage3-campsite/stage3Config.js';
 
-/** 森林小径入口 — 对白后前往营地 */
+/** AR3 森林小径 — 对白结束后进入 Stage3 `Stage3_EnterForest`（非 CampSelectScene）。 */
 export default class Scene3ForestEntry extends Phaser.Scene {
   constructor() {
     super({ key: 'AR3ForestScene' });
@@ -31,6 +32,11 @@ export default class Scene3ForestEntry extends Phaser.Scene {
 
     configureMainCameraSmoothPixels(this);
     this.cameras.main.fadeIn(600, 0, 0, 0);
+
+    warmTextureCache(this, [
+      { key: STAGE3_ASSETS.BG_FOREST_ENTRY.key, file: STAGE3_ASSETS.BG_FOREST_ENTRY.file },
+      { key: STAGE3_ASSETS.PORTRAIT_MAIN.key, file: STAGE3_ASSETS.PORTRAIT_MAIN.file },
+    ]);
 
     const cx = GAME_WIDTH / 2;
     const cy = GAME_HEIGHT / 2;
@@ -58,7 +64,7 @@ export default class Scene3ForestEntry extends Phaser.Scene {
     const runOutro = () => {
       this.cameras.main.fadeOut(600, 0, 0, 0);
       this.time.delayedCall(600, () => {
-        transitionScene(this, SCENE_KEYS.CAMP);
+        transitionScene(this, STAGE3_SCENE_KEYS.ENTER_FOREST);
       });
     };
 

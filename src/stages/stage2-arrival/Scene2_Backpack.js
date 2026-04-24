@@ -6,7 +6,7 @@ import {
 } from '../../utils/imageQuality.js';
 import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
 import { TEXT_HINT } from '../../utils/typography.js';
-import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
+import { applyAssetPathPrefix, gameAssetUrl, warmTextureCache } from '../../utils/assets.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
 
 /** 第一人称检查背包：按 B 打开背包系统图，按 E 关闭 */
@@ -27,6 +27,11 @@ export default class Scene2Backpack extends Phaser.Scene {
     configureMainCameraSmoothPixels(this);
     this.cameras.main.setBackgroundColor('#000000');
     this.cameras.main.fadeIn(600, 0, 0, 0);
+
+    warmTextureCache(this, [
+      { key: 'bg_forest_path', file: 'forest-path.png' },
+      { key: 'ar3_portrait', file: 'main character-png.png' },
+    ]);
 
     // 场景底层背景：Village1.png + 暗遮罩
     const sceneBg = this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'village1').setOrigin(0.5, 0.5).setDepth(0);

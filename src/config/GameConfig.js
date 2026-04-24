@@ -41,4 +41,6 @@ export const SCENE_KEYS = {
   HERBS: 'HerbHuntScene',
   FIRE_NPC: 'FirebuildingNpcScene',
   FIRE_SPOT_INSPECT: 'FireSpotInspectScene',
+  /** URL ?start=Stage3_EnterForest */
+  Stage3_EnterForest: 'Stage3_EnterForest',
 };

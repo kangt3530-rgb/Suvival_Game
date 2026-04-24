@@ -1,210 +1,98 @@
-/**
- * Campsite flow — state chunk (applied to CampSelectScene prototype).
- */
-export function mixinCampSelectScene1(Proto) {
-  Object.assign(Proto.prototype, {
-  onScene1IntroPointer(pointer) {
-    if (this.gameState !== 1 || !this.scene1IntroActive) return;
+import { GAME_WIDTH, GAME_HEIGHT } from '../../config/GameConfig.js';
+import {
+  configureMainCameraSmoothPixels,
+  setTextureLinearByKey,
+  scaleFullscreenBackgroundImage,
+} from '../../utils/imageQuality.js';
+import { createDialogBox, _runLines, GENERIC_DIALOG } from '../../utils/Dialogue.js';
+import { applyAssetPathPrefix, gameAssetUrl, warmTextureCache } from '../../utils/assets.js';
+import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
+import { addProtagonistIllustration, PORTRAIT_SLOTS } from '../stage1-background/stage1NotebookShared.js';
+import { STAGE3_SCENE_KEYS, STAGE3_ASSETS } from './stage3Config.js';
 
+/** Stage 3 — 进入森林暮色、决定停留 */
+export default class Stage3EnterForestScene extends Phaser.Scene {
+  constructor() {
+    super({ key: STAGE3_SCENE_KEYS.ENTER_FOREST });
+  }
+
+  preload() {
+    applyAssetPathPrefix(this);
+    this.load.image(STAGE3_ASSETS.BG_FOREST_ENTRY.key, gameAssetUrl(STAGE3_ASSETS.BG_FOREST_ENTRY.file));
+    this.load.image(STAGE3_ASSETS.PORTRAIT_MAIN.key, gameAssetUrl(STAGE3_ASSETS.PORTRAIT_MAIN.file));
+  }
+
+  create() {
+    const boot = this.sys.settings.data || {};
+    const sl = typeof boot.startLine === 'number' ? boot.startLine : 0;
     const lines = [
       "…It's farther than I thought. And the light's fading already…",
       "If I keep going like this, I won't make it through the night.",
       'I need to stop here… just for now.',
     ];
 
-    const advance = () => {
-      this.scene1IntroStep += 1;
+    configureMainCameraSmoothPixels(this);
+    this.cameras.main.fadeIn(600, 0, 0, 0);
 
-      if (this.scene1IntroStep === 1) {
-        this.tweens.add({
-          targets: this.eveningDimOverlay,
-          alpha: 0.52,
-          duration: 900,
-          ease: 'Sine.easeInOut',
-        });
-      }
+    warmTextureCache(this, [
+      { key: STAGE3_ASSETS.BG_NPC_MEET.key, file: STAGE3_ASSETS.BG_NPC_MEET.file },
+      { key: STAGE3_ASSETS.PORTRAIT_PLAYER_PNG.key, file: STAGE3_ASSETS.PORTRAIT_PLAYER_PNG.file },
+      { key: STAGE3_ASSETS.PORTRAIT_OLDMAN.key, file: STAGE3_ASSETS.PORTRAIT_OLDMAN.file },
+    ]);
 
-      if (this.scene1IntroStep < lines.length) {
-        this.dialogText.setText(lines[this.scene1IntroStep]);
-        return;
-      }
+    const cx = GAME_WIDTH / 2;
+    const cy = GAME_HEIGHT / 2;
 
-      this.input.off('pointerdown', this._scene1IntroPointer);
-      this.scene1IntroActive = false;
-      this.dialogText.setText(lines[lines.length - 1]);
-      this.buildScene1FourTerrains();
+    const bg = this.add.image(cx, cy, STAGE3_ASSETS.BG_FOREST_ENTRY.key).setOrigin(0.5, 0.5);
+    setTextureLinearByKey(this, STAGE3_ASSETS.BG_FOREST_ENTRY.key);
+    scaleFullscreenBackgroundImage(bg);
+
+    this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000).setAlpha(0.3).setDepth(1);
+
+    const portrait = addProtagonistIllustration(this, STAGE3_ASSETS.PORTRAIT_MAIN.key, {
+      ...GENERIC_DIALOG,
+      ...PORTRAIT_SLOTS.right,
+      /** thinking 原图较方、角色占比小于 main character-png，略放大以与 AR3 观感一致 */
+      portraitScaleMultiplier: 1.38,
+    });
+    this._portrait = portrait;
+
+    if (sl >= lines.length) {
+      portrait.setAlpha(1);
+    } else {
+      portrait.setAlpha(0);
+      this.tweens.add({ targets: portrait, alpha: 1, duration: 600, ease: 'Sine.easeOut' });
+    }
+
+    const dialog = createDialogBox(this, GENERIC_DIALOG);
+
+    const runOutro = () => {
+      const FADE_MS = 420;
+      this.cameras.main.fadeOut(FADE_MS, 0, 0, 0);
+      this.time.delayedCall(FADE_MS, () => {
+        transitionScene(this, STAGE3_SCENE_KEYS.NPC_ENCOUNTER);
+      });
     };
 
-    this.movePlayerThen(pointer.x, pointer.y, advance);
-  },
+    if (sl >= lines.length) {
+      this._dialogueLineIndex = lines.length;
+      dialog.say(lines[lines.length - 1], () => {});
+      const advance = () => {
+        this.input.off('pointerdown', advance);
+        runOutro();
+      };
+      this.input.once('pointerdown', advance);
+      addSceneBackButton(this);
+      return;
+    }
 
-  buildScene1IntroSequence() {
-    this.scene1IntroActive = true;
-    this.scene1IntroStep = 0;
-    this.eveningDimOverlay.setAlpha(0);
-    this.dialogText.setText(
-      "…It's farther than I thought. And the light's fading already…"
-    );
-    this.input.off('pointerdown', this._scene1IntroPointer);
-    this.input.on('pointerdown', this._scene1IntroPointer);
-  },
-
-  /**
-   * Scene 1：2×2 笛卡尔网格上的四块地貌；Graphics 画等距菱形，树地块叠加三角树冠。
-   * 命中：与可见菱形一致的 Phaser.Geom.Polygon，Zone 取包围盒左上角 + origin(0,0)，多边形为相对该点的局部坐标（与 Phaser 命中检测一致）。
-   */
-  buildScene1FourTerrains() {
-    const size = 60;
-    const spots = [
-      {
-        id: 'flat',
-        cartX: 0,
-        cartY: 0,
-        color: 0x3d8b4a,
-        label: 'Flat Open Ground',
-        line: 'Clear... but exposed.',
-        slopeLift: 0,
-        isTree: false,
-      },
-      {
-        id: 'water',
-        cartX: 160,
-        cartY: 0,
-        color: 0x2196f3,
-        label: 'Near Water',
-        line: "Ground's damp",
-        slopeLift: 0,
-        isTree: false,
-      },
-      {
-        id: 'slope',
-        cartX: 0,
-        cartY: 160,
-        color: 0x795548,
-        label: 'Uneven Slope',
-        line: 'Too steep',
-        slopeLift: 20,
-        isTree: false,
-      },
-      {
-        id: 'tree',
-        cartX: 160,
-        cartY: 160,
-        color: 0x8bc34a,
-        label: 'Near Tree',
-        line: 'Dense cover',
-        slopeLift: 0,
-        isTree: true,
-      },
-    ];
-
-    spots.forEach((loc) => {
-      const g = this.add.graphics();
-      this.pushStage(g);
-
-      const co = this.getIsoTileCorners(loc.cartX, loc.cartY, size);
-      if (loc.slopeLift) {
-        co.tl.y -= loc.slopeLift;
-        co.tr.y -= loc.slopeLift;
-      }
-
-      g.fillStyle(loc.color, 1);
-      g.beginPath();
-      g.moveTo(co.tl.x, co.tl.y);
-      g.lineTo(co.tr.x, co.tr.y);
-      g.lineTo(co.br.x, co.br.y);
-      g.lineTo(co.bl.x, co.bl.y);
-      g.closePath();
-      g.fillPath();
-      g.lineStyle(2, 0xffffff, 0.45);
-      g.strokePath();
-
-      const center = this.cartesianToIso(loc.cartX, loc.cartY);
-      if (loc.isTree) {
-        g.fillStyle(0x1b5e20, 1);
-        g.fillTriangle(center.x, center.y - 8, center.x - 22, center.y - 72, center.x + 22, center.y - 72);
-      }
-
-      g.setDepth(center.y);
-
-      const lblY = Math.max(co.bl.y, co.br.y, co.tl.y, co.tr.y) + 12;
-      const lbl = this.add
-        .text(center.x, lblY, loc.label, {
-          fontSize: '13px',
-          color: '#f0e6dc',
-        })
-        .setOrigin(0.5, 0)
-        .setDepth(WORLD_UI_LABEL_DEPTH);
-      this.pushStage(lbl);
-
-      const vx = [co.tl.x, co.tr.x, co.br.x, co.bl.x];
-      const vy = [co.tl.y, co.tr.y, co.br.y, co.bl.y];
-      const tb = lbl.getBounds();
-      const minX = Math.min(vx[0], vx[1], vx[2], vx[3], tb.x);
-      const minY = Math.min(vy[0], vy[1], vy[2], vy[3], tb.y);
-      const maxX = Math.max(vx[0], vx[1], vx[2], vx[3], tb.x + tb.width);
-      const maxY = Math.max(vy[0], vy[1], vy[2], vy[3], tb.y + tb.height);
-      const bw = Math.max(maxX - minX, 1);
-      const bh = Math.max(maxY - minY, 1);
-      const hitPoly = new Phaser.Geom.Polygon([
-        co.tl.x - minX,
-        co.tl.y - minY,
-        co.tr.x - minX,
-        co.tr.y - minY,
-        co.br.x - minX,
-        co.br.y - minY,
-        co.bl.x - minX,
-        co.bl.y - minY,
-      ]);
-      const zone = this.add.zone(minX, minY, bw, bh).setOrigin(0, 0);
-      zone.setInteractive(hitPoly, Phaser.Geom.Polygon.Contains);
-      zone.setDepth(center.y + 2);
-      this.pushStage(zone);
-
-      zone.on('pointerdown', (pointer) => {
-        this.movePlayerThen(pointer.x, pointer.y, () => {
-          this.dialogText.setText(loc.line);
-          if (loc.id === 'slope') {
-            this.tweens.add({
-              targets: g,
-              x: g.x - 6,
-              duration: 45,
-              yoyo: true,
-              repeat: 5,
-              onComplete: () => {
-                g.x = 0;
-              },
-            });
-          }
-          if (loc.id === 'water') {
-            this.cameras.main.shake(280, 0.008);
-          }
-        });
-      });
-      zone.on('pointerover', () => this.input.setDefaultCursor('pointer'));
-      zone.on('pointerout', () => this.input.setDefaultCursor('default'));
-    });
-
-    const continueScene1 = this.add
-      .text(GAME_WIDTH / 2, GAME_HEIGHT - 128, 'Continue', {
-        fontFamily: 'Segoe UI, Arial, sans-serif',
-        fontSize: '17px',
-        color: '#fff8e7',
-        backgroundColor: '#5c3d2e',
-        padding: { x: 22, y: 10 },
-      })
-      .setOrigin(0.5)
-      .setDepth(5002)
-      .setInteractive({ useHandCursor: true });
-    this.pushStage(continueScene1);
-    continueScene1.on('pointerdown', () => this.enterState(2));
-    continueScene1.on('pointerover', () => this.input.setDefaultCursor('pointer'));
-    continueScene1.on('pointerout', () => this.input.setDefaultCursor('default'));
-
-    const tileStand = this.cartesianToIso(80, 80);
-    this.ensurePlayerDot();
-    this.tweens.killTweensOf(this.playerDot);
-    this.playerDot.setPosition(tileStand.x, tileStand.y + 8);
+    _runLines(lines, dialog, this, runOutro, { startLine: sl });
+    addSceneBackButton(this);
   }
-  });
+
+  getResumePayload() {
+    return { startLine: this._dialogueLineIndex != null ? this._dialogueLineIndex : 0 };
+  }
 }
+
+// 注册：在 MainConfig.js 的 SCENE_KEY_TO_CLASS 和 DEFAULT_SCENE_ORDER 中手动添加

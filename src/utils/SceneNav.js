@@ -77,6 +77,7 @@ export function addSceneBackButton(scene, opts) {
     btn.setVisible(SCENE_NAV_STACK.length > 0);
   }
   syncVis();
+  scene.time.delayedCall(0, syncVis);
   btn.on('pointerover', function () {
     btn.setStyle({ backgroundColor: '#524638' });
   });

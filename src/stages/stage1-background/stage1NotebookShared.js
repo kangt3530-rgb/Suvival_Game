@@ -32,7 +32,9 @@ export function ensureNotebookIntroLoaded(scene) {
  *   portraitDepth?: number,
  *   portraitAdjustY?: number,
  *   portraitLiftPx?: number,
- * }} [dialogLayoutOpts] 与 `STAGE1_DIARY_DIALOG` 合并；某张立绘头偏高/偏低可设 `portraitAdjustY`（像素，负号上移）
+ *   portraitScaleMultiplier?: number,
+ * }} [dialogLayoutOpts] 与 `STAGE1_DIARY_DIALOG` 合并；某张立绘头偏高/偏低可设 `portraitAdjustY`（像素，负号上移）。
+ * 原图画布留白较多时可设 `portraitScaleMultiplier`（默认 1），在宽高上限算出的 scale 上再乘一层。
  */
 export function addProtagonistIllustration(scene, textureKey, dialogLayoutOpts = {}) {
   const opts = { ...STAGE1_DIARY_DIALOG, ...dialogLayoutOpts };
@@ -57,7 +59,9 @@ export function addProtagonistIllustration(scene, textureKey, dialogLayoutOpts =
     const maxW = GAME_WIDTH * wRatio;
     const maxH = GAME_HEIGHT * hRatio;
     const raw = Math.min(maxW / fw, maxH / fh);
-    const sc = Math.min(3.5, Math.max(0.05, raw));
+    let sc = Math.min(3.5, Math.max(0.05, raw));
+    const mul = opts.portraitScaleMultiplier != null ? Number(opts.portraitScaleMultiplier) : 1;
+    if (Number.isFinite(mul) && mul > 0) sc *= mul;
     img.setScale(sc);
   }
   return img;

@@ -3,15 +3,15 @@
  */
 import { addSceneBackButton } from '../../utils/SceneNav.js';
 import { TEXT_DIALOG_BODY } from '../../utils/typography.js';
-import { mixinCampSelectScene1 } from './Scene1_EnterForest.js';
-import { mixinCampSelectScene2 } from './Scene2_NpcEncounter.js';
-import { mixinCampSelectScene3 } from './Scene3_WaterDistance.js';
-import { mixinCampSelectScene4 } from './Scene4_TerrainTriple.js';
-import { mixinCampSelectScene5 } from './Scene5_WindExposure.js';
-import { mixinCampSelectScene6 } from './Scene6_ScanOverhead.js';
-import { mixinCampSelectScene7 } from './Scene7_FinalDecision.js';
-import { mixinCampSelectScene8 } from './Scene8_FinalCheck.js';
-import { mixinCampSelectScene9 } from './Scene9_HerbDiscovery.js';
+import { mixinCampSelectScene1 } from './_archive_old_prototype/Scene1_EnterForest.js';
+import { mixinCampSelectScene2 } from './_archive_old_prototype/Scene2_NpcEncounter.js';
+import { mixinCampSelectScene3 } from './_archive_old_prototype/Scene3_WaterDistance.js';
+import { mixinCampSelectScene4 } from './_archive_old_prototype/Scene4_TerrainTriple.js';
+import { mixinCampSelectScene5 } from './_archive_old_prototype/Scene5_WindExposure.js';
+import { mixinCampSelectScene6 } from './_archive_old_prototype/Scene6_ScanOverhead.js';
+import { mixinCampSelectScene7 } from './_archive_old_prototype/Scene7_FinalDecision.js';
+import { mixinCampSelectScene8 } from './_archive_old_prototype/Scene8_FinalCheck.js';
+import { mixinCampSelectScene9 } from './_archive_old_prototype/Scene9_HerbDiscovery.js';
 
 export default class CampSelectScene extends Phaser.Scene {
   constructor() {

@@ -8,6 +8,11 @@ import {
   GAME_HEIGHT,
   DEV_START_SCENE,
 } from '../../src/config/GameConfig.js';
+import { SCENE_NAV_STACK } from '../../src/utils/SceneNav.js';
+import Stage3EnterForestScene from '../../src/stages/stage3-campsite/Scene1_EnterForest.js';
+import Stage3NpcEncounterScene from '../../src/stages/stage3-campsite/Scene2_NpcEncounter.js';
+import Stage3ScoutingScene from '../../src/stages/stage3-campsite/Scene3_Scouting.js';
+import '../../src/scenes/test/TestHotspotScene.js';
 
 /** Phaser 场景 key → 类（由各 Scene 模块挂到 globalThis） */
 var SCENE_KEY_TO_CLASS = {
@@ -30,6 +35,10 @@ var SCENE_KEY_TO_CLASS = {
   HerbHuntScene: globalThis.HerbHuntScene,
   FirebuildingNpcScene: globalThis.FirebuildingNpcScene,
   FireSpotInspectScene: globalThis.FireSpotInspectScene,
+  TestHotspotScene: globalThis.TestHotspotScene,
+  Stage3_EnterForest: Stage3EnterForestScene,
+  Stage3_NpcEncounter: Stage3NpcEncounterScene,
+  Stage3_Scouting: Stage3ScoutingScene,
 };
 
 /** 默认播放顺序（与发布流程一致）；DEV 时可将其中某一类移到首位启动 */
@@ -53,6 +62,10 @@ var DEFAULT_SCENE_ORDER = [
   globalThis.HerbHuntScene,
   globalThis.FirebuildingNpcScene,
   globalThis.FireSpotInspectScene,
+  globalThis.TestHotspotScene,
+  Stage3EnterForestScene,
+  Stage3NpcEncounterScene,
+  Stage3ScoutingScene,
 ];
 
 /**
@@ -82,6 +95,14 @@ function resolveDevStartSceneKey() {
 
 function buildSceneListForBoot() {
   var devKey = resolveDevStartSceneKey();
+  try {
+    if (typeof window !== 'undefined' && window.location && window.location.search) {
+      var sp = new URLSearchParams(window.location.search);
+      if (sp.get('start')) {
+        SCENE_NAV_STACK.length = 0;
+      }
+    }
+  } catch (e) {}
   var list = DEFAULT_SCENE_ORDER.slice();
   if (devKey && SCENE_KEY_TO_CLASS[devKey]) {
     var First = SCENE_KEY_TO_CLASS[devKey];

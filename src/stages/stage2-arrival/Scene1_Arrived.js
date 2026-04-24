@@ -6,7 +6,7 @@ import {
 } from '../../utils/imageQuality.js';
 import { createDialogBox, _runLines, AR1_ARRIVED_DIALOG } from '../../utils/Dialogue.js';
 import { TEXT_HUD } from '../../utils/typography.js';
-import { applyAssetPathPrefix, gameAssetUrl } from '../../utils/assets.js';
+import { applyAssetPathPrefix, gameAssetUrl, warmTextureCache } from '../../utils/assets.js';
 import { transitionScene, addSceneBackButton } from '../../utils/SceneNav.js';
 import { addProtagonistIllustration } from '../stage1-background/stage1NotebookShared.js';
 
@@ -50,6 +50,13 @@ export default class Scene1Arrived extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
     setTextureLinearByKey(this, 'bg_village');
     scaleFullscreenBackgroundImage(bg);
+
+    warmTextureCache(this, [
+      { key: 'backpack', file: 'backpack.png' },
+      { key: 'bagSystem', file: 'bag system.png' },
+      { key: 'village1', file: 'Village1.png' },
+      { key: 'notebook3', file: 'notebook3.png' },
+    ]);
 
     this.add
       .rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000)
